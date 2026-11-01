@@ -51,8 +51,9 @@ body:not(.is-demo) .demo-only { display: none; }
 
 /* board */
 .main { padding: 12px; max-width: 1400px; margin: 0 auto; }
-#tab-orders { display: grid; grid-template-columns: 1fr; grid-gap: 14px; }
-@media (min-width: 1000px) { #tab-orders { grid-template-columns: repeat(3, 1fr); align-items: start; } }
+.board { display: grid; grid-template-columns: 1fr; grid-gap: 14px; }
+.board[hidden] { display: none !important; }
+@media (min-width: 1000px) { .board { grid-template-columns: repeat(3, 1fr); align-items: start; } }
 .col h2 { margin: 6px 0 10px; font-size: 18px; display: flex; align-items: center; }
 .count { margin-left: 8px; min-width: 26px; padding: 0 8px; border-radius: 13px; background: var(--ink); color: #fff; font-size: 14px; text-align: center; }
 .count:empty { display: none; }
@@ -132,3 +133,14 @@ body:not(.is-demo) .demo-only { display: none; }
 
 .toast { position: fixed; left: 50%; bottom: 20px; z-index: 60; transform: translate(-50%, 20px); opacity: 0; padding: 10px 18px; border-radius: 999px; background: var(--ink); color: #fff; font-weight: 600; transition: opacity .2s, transform .2s; pointer-events: none; }
 .toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+
+/* bookings */
+.bk { background: var(--paper); border-radius: 16px; padding: 12px 14px; margin-bottom: 10px; border: 1px solid var(--line); border-left: 6px solid var(--gold); }
+.bk--confirmed { border-left-color: var(--green); }
+.bk--refused, .bk--cancelled, .bk--past { opacity: .7; border-left-color: var(--line); }
+.bk__when { display: flex; flex-wrap: wrap; align-items: baseline; font-weight: 800; font-size: 18px; }
+.bk__when .muted { margin-left: auto; padding-left: 10px; font-weight: 500; font-size: 13px; }
+.bk__who { margin: 6px 0 0; }
+.bk__people { display: inline-block; margin-top: 6px; padding: 2px 10px; border-radius: 999px; background: var(--green-soft); color: var(--green); font-weight: 700; }
+.bk__kids { background: #fff0cf; color: #7a5300; margin-left: 6px; }
+.btn--wa { background: #1f9e58; color: #fff; }

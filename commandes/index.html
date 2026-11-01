@@ -12,7 +12,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="CN Commandes">
-  <link rel="stylesheet" href="/commandes/commandes.css?v=1">
+  <link rel="stylesheet" href="/commandes/commandes.css?v=2">
 </head>
 <body>
   <!-- Sign in -->
@@ -50,6 +50,7 @@
       <div class="bar__place"><span id="place"></span><span class="pill pill--demo" id="demo-pill" hidden>DÉMO</span></div>
       <nav class="tabs" role="tablist">
         <button role="tab" type="button" data-tab="orders" aria-selected="true">Commandes <span class="tabs__n" id="count-new" hidden></span></button>
+        <button role="tab" type="button" data-tab="book" aria-selected="false">Réservations <span class="tabs__n" id="count-book" hidden></span></button>
         <button role="tab" type="button" data-tab="stats" aria-selected="false">Statistiques</button>
       </nav>
       <button class="bar__menu" type="button" id="menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="Menu">☰</button>
@@ -65,7 +66,7 @@
     </header>
 
     <main class="main">
-      <div id="tab-orders" role="tabpanel">
+      <div id="tab-orders" class="board" role="tabpanel">
         <p class="offline" id="offline" hidden>Connexion perdue · nouvelle tentative…</p>
         <section class="col">
           <h2>Nouvelles <span class="count" id="n-new"></span></h2>
@@ -78,6 +79,21 @@
         <section class="col">
           <h2>Terminées (24 h) <span class="count" id="n-done"></span></h2>
           <div class="list" id="list-done"></div>
+        </section>
+      </div>
+
+      <div id="tab-book" class="board" role="tabpanel" hidden>
+        <section class="col">
+          <h2>À confirmer <span class="count" id="n-bnew"></span></h2>
+          <div class="list" id="list-bnew"></div>
+        </section>
+        <section class="col">
+          <h2>Confirmées <span class="count" id="n-bok"></span></h2>
+          <div class="list" id="list-bok"></div>
+        </section>
+        <section class="col">
+          <h2>Passées, refusées ou annulées <span class="count" id="n-bold"></span></h2>
+          <div class="list" id="list-bold"></div>
         </section>
       </div>
 
@@ -126,8 +142,8 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="/js/config.js?v=1"></script>
-  <script src="/js/orders.js?v=1"></script>
-  <script src="/commandes/commandes.js?v=1"></script>
+  <script src="/js/config.js?v=2"></script>
+  <script src="/js/orders.js?v=2"></script>
+  <script src="/commandes/commandes.js?v=2"></script>
 </body>
 </html>

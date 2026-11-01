@@ -8,8 +8,11 @@
  *  - SUPABASE: the customer adds an order and reads or cancels it with its secret token, sent in the
  *    "x-order-token" header (row level security, see supabase/schema.sql). Plain fetch calls: no library to load.
  *
+ * Table bookings (/reserver/) go the same way: ORDERS.book(reservation) adds one; the staff confirm it from
+ * /commandes/ (call or WhatsApp). Personal details are erased 24 hours after the booked time.
+ *
  * window.ORDERS = { demo, create(order), get(id, token), cancel(id, token), watch(id, token, onChange) → stop,
- *                   DemoStore (used by the staff screen in demo mode) }
+ *                   book(reservation), DemoStore, DemoBookings (used by the staff screen in demo mode) }
  */
 (function () {
   const O = (window.CONFIG && window.CONFIG.orders) || {};
@@ -24,67 +27,79 @@
     constructor(code, message) { super(message || code); this.code = code; }
   }
 
-  /* ---------- Demo store (localStorage) ---------- */
-  const KEY = "cibo.demo.orders.v1";
-  const DemoStore = {
-    read() {
-      try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; }
-    },
-    write(list) {
-      try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) { throw new OrderError("storage"); }
-      // the storage event only reaches the other tabs; tell this one too
-      window.dispatchEvent(new CustomEvent("cibo-demo-orders"));
-    },
-    // The database's scheduled clean-ups, run on every read in demo mode.
-    tidy(list) {
-      const now = Date.now();
-      let changed = false;
-      list = list.filter((o) => {
-        const keep = now - Date.parse(o.created_at) < 2 * 365 * 864e5;
-        if (!keep) changed = true;
-        return keep;
-      });
-      list.forEach((o) => {
-        if (!o.anonymized_at && now - Date.parse(o.created_at) > 864e5) {
-          Object.assign(o, { customer_name: null, customer_phone: null, address: null, lat: null, lng: null, distance_km: null, notes: null, anonymized_at: new Date().toISOString() });
-          changed = true;
+  /* ---------- Demo stores (localStorage) ---------- */
+  // forgetAfter(row) → the time (ms) after which the row's personal details are erased.
+  function makeStore(KEY, PERSONAL, forgetAfter, finished) {
+    const S = {
+      read() {
+        try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; }
+      },
+      write(list) {
+        try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) { throw new OrderError("storage"); }
+        // the storage event only reaches the other tabs; tell this one too
+        window.dispatchEvent(new CustomEvent("cibo-demo-" + KEY));
+      },
+      // The database's scheduled clean-ups, run on every read in demo mode.
+      tidy(list) {
+        const now = Date.now();
+        let changed = false;
+        list = list.filter((o) => {
+          const keep = now - Date.parse(o.created_at) < 2 * 365 * 864e5;
+          if (!keep) changed = true;
+          return keep;
+        });
+        list.forEach((o) => {
+          if (!o.anonymized_at && now > forgetAfter(o)) {
+            PERSONAL.forEach((k) => { o[k] = null; });
+            o.anonymized_at = new Date().toISOString();
+            changed = true;
+          }
+        });
+        if (changed) S.write(list);
+        return list;
+      },
+      all() { return S.tidy(S.read()); },
+      insert(row) {
+        const list = S.all();
+        const tenMin = Date.now() - 10 * 60e3;
+        if (list.filter((o) => o.customer_phone === row.customer_phone && Date.parse(o.created_at) > tenMin).length >= 5) {
+          throw new OrderError("spam");
         }
-      });
-      if (changed) DemoStore.write(list);
-      return list;
-    },
-    all() { return DemoStore.tidy(DemoStore.read()); },
-    insert(order) {
-      const list = DemoStore.all();
-      const tenMin = Date.now() - 10 * 60e3;
-      if (list.filter((o) => o.customer_phone === order.customer_phone && Date.parse(o.created_at) > tenMin).length >= 5) {
-        throw new OrderError("spam");
-      }
-      const now = new Date().toISOString();
-      list.push(Object.assign({ status: "new", created_at: now, updated_at: now, eta_minutes: null, accepted_at: null,
-        refuse_reason: null, cancel_reason: null, cancelled_by: null, anonymized_at: null, demo: true }, order));
-      DemoStore.write(list);
-    },
-    update(id, patch) {
-      const list = DemoStore.all();
-      const o = list.find((x) => x.id === id);
-      if (!o) return null;
-      if (["done", "refused", "cancelled"].includes(o.status)) return o; // a finished order cannot change
-      Object.assign(o, patch, { updated_at: new Date().toISOString() });
-      if (patch.status === "accepted" && !o.accepted_at) o.accepted_at = o.updated_at;
-      DemoStore.write(list);
-      return o;
-    },
-    remove(ids) {
-      DemoStore.write(DemoStore.all().filter((o) => !ids.includes(o.id)));
-    },
-    subscribe(cb) {
-      const onStorage = (e) => { if (!e.key || e.key === KEY) cb(); };
-      window.addEventListener("storage", onStorage);
-      window.addEventListener("cibo-demo-orders", cb);
-      return () => { window.removeEventListener("storage", onStorage); window.removeEventListener("cibo-demo-orders", cb); };
-    },
-  };
+        const now = new Date().toISOString();
+        list.push(Object.assign({ status: "new", created_at: now, updated_at: now, anonymized_at: null, demo: true }, row));
+        S.write(list);
+      },
+      update(id, patch) {
+        const list = S.all();
+        const o = list.find((x) => x.id === id);
+        if (!o) return null;
+        if (finished.includes(o.status)) return o; // a finished row cannot change
+        Object.assign(o, patch, { updated_at: new Date().toISOString() });
+        if (patch.status === "accepted" && !o.accepted_at) o.accepted_at = o.updated_at;
+        S.write(list);
+        return o;
+      },
+      remove(ids) {
+        S.write(S.all().filter((o) => !ids.includes(o.id)));
+      },
+      subscribe(cb) {
+        const onStorage = (e) => { if (!e.key || e.key === KEY) cb(); };
+        window.addEventListener("storage", onStorage);
+        window.addEventListener("cibo-demo-" + KEY, cb);
+        return () => { window.removeEventListener("storage", onStorage); window.removeEventListener("cibo-demo-" + KEY, cb); };
+      },
+    };
+    return S;
+  }
+  const DemoStore = makeStore("cibo.demo.orders.v1",
+    ["customer_name", "customer_phone", "address", "lat", "lng", "distance_km", "notes"],
+    (o) => Date.parse(o.created_at) + 864e5, ["done", "refused", "cancelled"]);
+  // A booking's details are kept until 24 hours after the booked time.
+  const bookedAt = (b) => Date.parse(`${b.date}T${b.time}:00Z`) - 3600e3; // Casablanca is UTC+1
+  const DemoBookings = makeStore("cibo.demo.bookings.v1",
+    ["customer_name", "customer_phone", "notes"],
+    (b) => Math.max(bookedAt(b), Date.parse(b.created_at)) + 864e5, ["refused", "cancelled"]);
+
   const publicView = (o) => {
     if (!o) return null;
     const out = {};
@@ -108,7 +123,7 @@
   async function create(order) {
     order = Object.assign({ id: uuid(), token: uuid() }, order);
     if (demo) {
-      DemoStore.insert(order);
+      DemoStore.insert(Object.assign({ eta_minutes: null, accepted_at: null, refuse_reason: null, cancel_reason: null, cancelled_by: null }, order));
     } else {
       const res = await rest("orders", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify(order) });
       if (!res.ok) await fail(res);
@@ -170,5 +185,17 @@
     return () => { stopped = true; clearInterval(timer); document.removeEventListener("visibilitychange", onVis); };
   }
 
-  window.ORDERS = { demo, create, get, cancel, watch, uuid, DemoStore, OrderError };
+  // A table booking: no token to read it back; the staff confirm by phone or WhatsApp.
+  async function book(b) {
+    b = Object.assign({ id: uuid() }, b);
+    if (demo) {
+      DemoBookings.insert(b);
+    } else {
+      const res = await rest("reservations", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify(b) });
+      if (!res.ok) await fail(res);
+    }
+    return { id: b.id };
+  }
+
+  window.ORDERS = { demo, create, get, cancel, watch, book, uuid, DemoStore, DemoBookings, OrderError };
 })();

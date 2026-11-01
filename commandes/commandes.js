@@ -8,6 +8,9 @@
  * Orders older than 24 hours are hidden (their personal details are erased by then).
  * The owner follows the orders and the statistics, without the pop-up, the sound or the buttons.
  *
+ * « Réservations »: the table bookings from /reserver/. The staff call the customer, or confirm and send the
+ * confirmation on WhatsApp themselves (the message is written for them), or refuse with a reason.
+ *
  * DEMO MODE (no Supabase in js/config.js): the orders of this browser (js/orders.js), and two buttons instead of
  * the sign-in form, to enter as the staff or as the owner.
  */
@@ -16,6 +19,7 @@
   const O = C.orders;
   const DEMO = window.ORDERS.demo;
   const Store = window.ORDERS.DemoStore;
+  const Bookings = window.ORDERS.DemoBookings;
   const POLL_MS = 20000;
   const RING_EVERY_MS = 2600;
   const DAY_START_HOUR = 6; // a service day runs from 06:00 to 06:00, Casablanca time
@@ -41,6 +45,8 @@
   let site = null;        // the account's restaurant (null for the owner)
   let owner = false;
   let orders = new Map(); // id → order, last 24 hours
+  let bookings = new Map(); // id → booking, from yesterday on
+  let seenBookings = null;  // ids already shown (a new one rings once)
   let alertId = null;
   let channel = null, pollTimer = null, ringTimer = null, audioCtx = null, wakeLock = null, installEvt = null;
   let period = "today";
@@ -186,8 +192,10 @@
   }
   function startLive() {
     loadOrders();
+    loadBookings();
     if (DEMO) {
       Store.subscribe(() => { loadOrders(); if (!$("#tab-stats").hidden) renderStats(); });
+      Bookings.subscribe(loadBookings);
     } else {
       channel = db.channel("orders-live")
         .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (p) => {
@@ -196,9 +204,15 @@
           else if (o && mine(o)) orders.set(o.id, o);
           render();
         })
+        .on("postgres_changes", { event: "*", schema: "public", table: "reservations" }, (p) => {
+          const b = p.new && p.new.id ? p.new : null;
+          if (p.eventType === "DELETE" && p.old) bookings.delete(p.old.id);
+          else if (b && mine(b)) bookings.set(b.id, b);
+          renderBookings();
+        })
         .subscribe((status) => { $("#offline").hidden = status === "SUBSCRIBED"; });
     }
-    pollTimer = setInterval(loadOrders, POLL_MS);
+    pollTimer = setInterval(() => { loadOrders(); loadBookings(); }, POLL_MS);
   }
   function stopLive() {
     clearInterval(pollTimer);
@@ -360,6 +374,115 @@
     });
   }
 
+  /* ---------- Table bookings ---------- */
+  const yesterday = () => { const d = new Date(Date.now() - 864e5); return parts(d).y + "-" + String(parts(d).m).padStart(2, "0") + "-" + String(parts(d).d).padStart(2, "0"); };
+  async function loadBookings() {
+    const from = yesterday();
+    if (DEMO) {
+      bookings = new Map(Bookings.all().filter((b) => mine(b) && b.date >= from).map((b) => [b.id, b]));
+    } else {
+      let q = db.from("reservations").select("*").gte("date", from).order("date").order("time").limit(300);
+      if (!owner) q = q.eq("location", site.id);
+      const { data, error } = await q;
+      if (error) return;
+      bookings = new Map(data.map((b) => [b.id, b]));
+    }
+    renderBookings();
+  }
+  // the booked moment (Casablanca time is UTC+1 outside Ramadan; close enough to sort and to call it past)
+  const bookedMs = (b) => Date.parse(`${b.date}T${b.time}:00Z`) - 3600e3;
+  const isPast = (b) => Date.now() > bookedMs(b) + 3 * 3600e3;
+  const bDay = (b) => new Date(b.date + "T12:00:00Z").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+  const peopleTxt = (b) => `${b.people} personne${b.people > 1 ? "s" : ""}`;
+  const waNumber = (phone) => "212" + String(phone).replace(/^0/, "");
+  function confirmText(b) {
+    if (b.lang === "en") {
+      const d = new Date(b.date + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
+      return `Hello ${b.customer_name}, your table at ${C.name} is confirmed: ${d} at ${b.time}, ${b.people} ${b.people > 1 ? "people" : "person"}. See you soon! ${C.name}`;
+    }
+    return `Bonjour ${b.customer_name}, votre table chez ${C.name} est confirmée : ${bDay(b)} à ${b.time}, ${peopleTxt(b)}. À bientôt ! ${C.name}`;
+  }
+  function refuseText(b, reason) {
+    if (b.lang === "en") return `Hello ${b.customer_name}, sorry, we cannot take your booking for ${b.date} at ${b.time}${reason ? ` (${reason})` : ""}. Call us to find another time. ${C.name}`;
+    return `Bonjour ${b.customer_name}, désolé, nous ne pouvons pas accepter votre réservation du ${bDay(b)} à ${b.time}${reason ? ` (${reason})` : ""}. Appelez-nous pour trouver un autre moment. ${C.name}`;
+  }
+  function bookingHtml(b) {
+    const past = isPast(b);
+    const s = b.status;
+    const who = b.anonymized_at ? `<p class="muted">Coordonnées effacées (24 h après)</p>` : `
+      <p class="bk__who"><b>${esc(b.customer_name)}</b> · <a href="tel:${esc(b.customer_phone)}">${esc(phoneFmt(b.customer_phone))}</a></p>
+      ${b.notes ? `<p class="notes">📝 ${esc(b.notes)}</p>` : ""}`;
+    let actions = "";
+    if (!owner && !past && !b.anonymized_at) {
+      if (s === "new") actions = `
+        <a class="btn btn--line" href="tel:${esc(b.customer_phone)}">📞 Appeler</a>
+        <button class="btn btn--green" type="button" data-bk="confirm" data-id="${b.id}">Confirmer</button>
+        <button class="btn btn--wa" type="button" data-bk="confirm-wa" data-id="${b.id}">Confirmer + WhatsApp</button>
+        <button class="btn btn--ghost" type="button" data-bk="refuse" data-id="${b.id}">Refuser</button>`;
+      if (s === "confirmed") actions = `
+        <a class="btn btn--line" href="tel:${esc(b.customer_phone)}">📞 Appeler</a>
+        <button class="btn btn--wa" type="button" data-bk="wa" data-id="${b.id}">WhatsApp</button>
+        <button class="btn btn--ghost" type="button" data-bk="cancel" data-id="${b.id}">Annuler</button>`;
+    }
+    const label = { new: "À confirmer", confirmed: "Confirmée", refused: "Refusée", cancelled: "Annulée" }[s] || s;
+    return `<article class="bk bk--${past && s !== "refused" && s !== "cancelled" ? "past" : s}" data-id="${b.id}">
+      <p class="bk__when">${esc(bDay(b))} · ${esc(b.time)}<span class="muted">${esc(label)} · reçue ${time(b.created_at)}</span></p>
+      <span class="bk__people">👥 ${esc(peopleTxt(b))}</span>${b.kids ? `<span class="bk__people bk__kids">dont ${b.kids} enfant${b.kids > 1 ? "s" : ""}</span>` : ""}
+      ${who}
+      ${b.refuse_reason ? `<p class="muted">Motif : ${esc(b.refuse_reason)}</p>` : ""}
+      ${actions ? `<div class="order__actions">${actions}</div>` : ""}
+    </article>`;
+  }
+  function renderBookings() {
+    const all = Array.from(bookings.values()).sort((a, b) => bookedMs(a) - bookedMs(b));
+    const g = {
+      bnew: all.filter((b) => b.status === "new" && !isPast(b)),
+      bok: all.filter((b) => b.status === "confirmed" && !isPast(b)),
+      bold: all.filter((b) => isPast(b) || b.status === "refused" || b.status === "cancelled").reverse(),
+    };
+    const empty = { bnew: "Aucune demande à confirmer.", bok: "Aucune réservation confirmée à venir.", bold: "Rien pour le moment." };
+    Object.keys(g).forEach((k) => {
+      $("#list-" + k).innerHTML = g[k].length ? g[k].map(bookingHtml).join("") : `<p class="empty">${empty[k]}</p>`;
+      $("#n-" + k).textContent = g[k].length || "";
+    });
+    $("#count-book").textContent = g.bnew.length;
+    $("#count-book").hidden = !g.bnew.length;
+    // a new request rings once (staff accounts)
+    const ids = new Set(all.map((b) => b.id));
+    if (seenBookings && !owner) {
+      const fresh = g.bnew.filter((b) => !seenBookings.has(b.id));
+      if (fresh.length) { ring(); toast(`Nouvelle réservation · ${bDay(fresh[0])} · ${fresh[0].time}`); }
+    }
+    seenBookings = ids;
+  }
+  async function updateBooking(id, patch) {
+    if (owner) return;
+    if (DEMO) { Bookings.update(id, patch); return loadBookings(); }
+    const { data, error } = await db.from("reservations").update(patch).eq("id", id).select().maybeSingle();
+    if (error) { toast("Échec de l'envoi. Réessayez."); return; }
+    if (data) { bookings.set(data.id, data); renderBookings(); }
+  }
+  function setupBookings() {
+    $("#tab-book").addEventListener("click", async (e) => {
+      const btn = e.target.closest("[data-bk]");
+      if (!btn) return;
+      const b = bookings.get(btn.dataset.id);
+      if (!b) return;
+      const act = btn.dataset.bk;
+      // WhatsApp opens first (a phone blocks a window opened after waiting)
+      const wa = (text) => window.open(`https://wa.me/${waNumber(b.customer_phone)}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+      if (act === "confirm") { await updateBooking(b.id, { status: "confirmed" }); toast("Réservation confirmée."); }
+      if (act === "confirm-wa") { wa(confirmText(b)); await updateBooking(b.id, { status: "confirmed" }); }
+      if (act === "wa") wa(confirmText(b));
+      if (act === "refuse" || act === "cancel") {
+        const reason = prompt(act === "refuse" ? "Motif du refus (optionnel) :" : "Motif de l'annulation (optionnel) :", "");
+        if (reason === null) return;
+        if (confirm("Prévenir le client sur WhatsApp ?")) wa(refuseText(b, reason.trim()));
+        await updateBooking(b.id, { status: act === "refuse" ? "refused" : "cancelled", refuse_reason: reason.trim().slice(0, 120) || null });
+      }
+    });
+  }
+
   /* ---------- Statistics ---------- */
   // Casablanca wall-clock parts of a date.
   function parts(d) {
@@ -508,6 +631,7 @@
   function switchTab(tab) {
     $$("[data-tab]").forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === tab ? "true" : "false"));
     $("#tab-orders").hidden = tab !== "orders";
+    $("#tab-book").hidden = tab !== "book";
     $("#tab-stats").hidden = tab !== "stats";
     if (tab === "stats") renderStats();
   }
@@ -533,11 +657,12 @@
     $("#start-btn").addEventListener("click", startApp);
     window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; $("#install-btn").hidden = false; });
     if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("/commandes/sw.js", { scope: "/commandes/" }).catch(() => {});
-    setInterval(() => { if (!$("#app").hidden) render(); }, 60e3); // minutes since
+    setInterval(() => { if (!$("#app").hidden) { render(); renderBookings(); } }, 60e3); // minutes since
   }
 
   setupAlert();
   setupBoard();
+  setupBookings();
   setupChrome();
   boot();
 })();

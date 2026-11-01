@@ -18,16 +18,43 @@ create schema if not exists private;
 revoke all on schema private from public, anon, authenticated;
 
 -- ---------- Restaurants (one for now; add rows to open another) ----------
+-- zone: the delivery area drawn by the owner, [[lat, lng], …] (the same list as CONFIG.delivery.zone in js/config.js)
 create table public.locations (
   id      text primary key,
   name    text not null,
   lat     double precision not null,
   lng     double precision not null,
-  max_km  numeric(4, 1) not null default 4,
-  fee     int not null default 10
+  max_km  numeric(4, 1) not null default 8,
+  fee     int not null default 10,
+  zone    jsonb not null default '[]'
 );
-insert into public.locations (id, name, lat, lng, max_km, fee)
-values ('el-mansouria', 'Cibo Napoli', 33.7372332, -7.3142341, 4, 10);
+insert into public.locations (id, name, lat, lng, max_km, fee, zone)
+values ('el-mansouria', 'Cibo Napoli', 33.7372332, -7.3142341, 8, 10,
+        '[[33.71425,-7.35303],[33.71882,-7.35166],[33.72024,-7.34651],[33.72096,-7.34307],[33.72453,-7.34479],[33.7281,-7.34685],[33.73095,-7.34565],[33.73238,-7.34136],[33.73381,-7.33707],[33.73666,-7.33449],[33.73809,-7.3302],[33.74023,-7.32591],[33.74166,-7.32162],[33.74451,-7.31732],[33.74665,-7.31303],[33.74951,-7.3096],[33.75236,-7.30702],[33.75379,-7.30273],[33.75736,-7.30102],[33.75879,-7.29844],[33.76021,-7.29501],[33.76235,-7.29157],[33.76521,-7.28814],[33.76521,-7.28471],[33.76164,-7.27956],[33.75879,-7.27613],[33.7545,-7.27355],[33.75022,-7.27183],[33.74523,-7.27012],[33.74309,-7.27441],[33.74023,-7.27956],[33.73666,-7.28471],[33.73309,-7.28986],[33.73024,-7.29501],[33.72596,-7.30187],[33.72167,-7.30874],[33.71739,-7.31561],[33.7131,-7.32076],[33.705,-7.33485],[33.69786,-7.34858],[33.69286,-7.36232],[33.69358,-7.37433],[33.69786,-7.38292],[33.70358,-7.38549],[33.709,-7.38377],[33.70957,-7.37691],[33.71015,-7.36918],[33.71157,-7.3606]]');
+
+-- Is the point inside the zone? (ray casting; an empty zone means "no limit but max_km")
+create or replace function private.in_zone(zone jsonb, plat double precision, plng double precision)
+  returns boolean language plpgsql immutable set search_path = '' as $$
+declare
+  n int := jsonb_array_length(zone);
+  inside boolean := false;
+  i int; j int;
+  yi double precision; xi double precision; yj double precision; xj double precision;
+begin
+  if n < 3 then return true; end if;
+  j := n - 1;
+  for i in 0 .. n - 1 loop
+    yi := (zone -> i ->> 0)::double precision; xi := (zone -> i ->> 1)::double precision;
+    yj := (zone -> j ->> 0)::double precision; xj := (zone -> j ->> 1)::double precision;
+    if ((yi > plat) <> (yj > plat)) and (plng < (xj - xi) * (plat - yi) / (yj - yi) + xi) then
+      inside := not inside;
+    end if;
+    j := i;
+  end loop;
+  return inside;
+end;
+$$;
+revoke all on function private.in_zone(jsonb, double precision, double precision) from public;
 
 -- ---------- Staff accounts ----------
 create table public.staff (
@@ -149,7 +176,7 @@ begin
   if new.mode = 'delivery' then
     km := 2 * 6371 * asin(sqrt(power(sin(radians(new.lat - loc.lat) / 2), 2)
           + cos(radians(loc.lat)) * cos(radians(new.lat)) * power(sin(radians(new.lng - loc.lng) / 2), 2)));
-    if km > loc.max_km + 0.05 then
+    if km > loc.max_km + 0.05 or not private.in_zone(loc.zone, new.lat, new.lng) then
       raise exception 'Adresse hors zone de livraison.' using errcode = 'P0002';
     end if;
     if new.delivery_fee <> loc.fee then
@@ -205,6 +232,85 @@ revoke all on function private.orders_forget() from public, anon, authenticated;
 select cron.schedule('orders-forget-24h', '*/15 * * * *', 'select private.orders_forget()');
 -- Every night: orders older than 2 years are deleted.
 select cron.schedule('orders-keep-two-years', '17 3 * * *', $$ delete from public.orders where created_at < now() - interval '2 years' $$);
+
+-- ---------- Table bookings (/reserver/) ----------
+-- Customers (anon) may only ADD a booking; the staff confirm it by phone or WhatsApp from /commandes/.
+-- The customer's name, phone and note are erased 24 hours after the booked time.
+create table public.reservations (
+  id             uuid primary key,
+  location       text not null references public.locations (id),
+  created_at     timestamptz not null default now(),
+  updated_at     timestamptz not null default now(),
+  date           date not null,
+  time           text not null check (time ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'),
+  people         int not null check (people between 1 and 20),
+  kids           int not null default 0 check (kids >= 0),
+  status         text not null default 'new' check (status in ('new', 'confirmed', 'refused', 'cancelled')),
+  refuse_reason  text check (char_length(refuse_reason) <= 120),
+  customer_name  text check (char_length(customer_name) between 1 and 60),
+  customer_phone text check (customer_phone ~ '^0[5-7][0-9]{8}$'),
+  notes          text check (char_length(notes) <= 300),
+  lang           text not null default 'fr' check (lang in ('fr', 'en')),
+  anonymized_at  timestamptz,
+  check (kids < people),
+  check ((customer_name is not null and customer_phone is not null) or anonymized_at is not null)
+);
+create index reservations_location_date_idx on public.reservations (location, date, time);
+create index reservations_phone_created_idx on public.reservations (customer_phone, created_at desc) where customer_phone is not null;
+alter table public.reservations enable row level security;
+revoke all on table public.reservations from anon, authenticated;
+
+grant insert (id, location, date, time, people, kids, customer_name, customer_phone, notes, lang)
+  on table public.reservations to anon;
+create policy "customers ask for a table" on public.reservations for insert to anon
+  with check (status = 'new' and date >= (now() at time zone 'Africa/Casablanca')::date
+              and date <= (now() at time zone 'Africa/Casablanca')::date + 60);
+
+grant select on table public.reservations to authenticated;
+grant update (status, refuse_reason) on table public.reservations to authenticated;
+create policy "staff see their restaurant's bookings" on public.reservations for select to authenticated
+  using ((select private.staff_can(location)));
+create policy "staff answer their restaurant's bookings" on public.reservations for update to authenticated
+  using ((select private.staff_can(location))) with check ((select private.staff_can(location)));
+
+-- At most 5 requests per phone in 10 minutes; updated_at on every change.
+create or replace function private.reservations_check_new()
+  returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if (select count(*) from public.reservations r
+      where r.customer_phone = new.customer_phone and r.created_at > now() - interval '10 minutes') >= 5 then
+    raise exception 'Trop de demandes depuis ce numéro, réessayez dans quelques minutes.' using errcode = 'P0001';
+  end if;
+  return new;
+end;
+$$;
+revoke all on function private.reservations_check_new() from public;
+create trigger reservations_check_new before insert on public.reservations
+  for each row execute function private.reservations_check_new();
+create or replace function private.reservations_touch()
+  returns trigger language plpgsql set search_path = '' as $$
+begin
+  new.updated_at := now();
+  return new;
+end;
+$$;
+revoke all on function private.reservations_touch() from public;
+create trigger reservations_touch before update on public.reservations
+  for each row execute function private.reservations_touch();
+
+alter publication supabase_realtime add table public.reservations;
+
+-- Every 15 minutes: bookings whose time is more than 24 hours ago lose the customer's details.
+create or replace function private.reservations_forget()
+  returns void language sql set search_path = '' as $$
+  update public.reservations
+     set customer_name = null, customer_phone = null, notes = null, anonymized_at = now()
+   where anonymized_at is null
+     and ((date + time::time) at time zone 'Africa/Casablanca') < now() - interval '24 hours';
+$$;
+revoke all on function private.reservations_forget() from public, anon, authenticated;
+select cron.schedule('reservations-forget-24h', '7,22,37,52 * * * *', 'select private.reservations_forget()');
+select cron.schedule('reservations-keep-two-years', '27 3 * * *', $$ delete from public.reservations where date < current_date - interval '2 years' $$);
 
 -- ---------- Push notifications to the staff phones ----------
 -- The phones that turned notifications on (each account manages its own).

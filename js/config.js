@@ -35,13 +35,33 @@ window.CONFIG = {
   hours: { open: "12:00", close: "00:00" },
   timeZone: "Africa/Casablanca",
   currency: "DH",
-  // Delivery: anywhere within maxKm (straight line) of the restaurant, one flat fee (DH).
-  delivery: { maxKm: 4, fee: 10 },
+  // Delivery: inside the zone drawn by the owner (El Mansouria along the coast, plus the east of Mohammedia) and
+  // never more than maxKm (straight line) from the restaurant; one flat fee (DH). zone = [lat, lng] corners.
+  delivery: {
+    maxKm: 8,
+    fee: 10,
+    zone: [
+      [33.71425, -7.35303], [33.71882, -7.35166], [33.72024, -7.34651], [33.72096, -7.34307],
+      [33.72453, -7.34479], [33.7281, -7.34685], [33.73095, -7.34565], [33.73238, -7.34136],
+      [33.73381, -7.33707], [33.73666, -7.33449], [33.73809, -7.3302], [33.74023, -7.32591],
+      [33.74166, -7.32162], [33.74451, -7.31732], [33.74665, -7.31303], [33.74951, -7.3096],
+      [33.75236, -7.30702], [33.75379, -7.30273], [33.75736, -7.30102], [33.75879, -7.29844],
+      [33.76021, -7.29501], [33.76235, -7.29157], [33.76521, -7.28814], [33.76521, -7.28471],
+      [33.76164, -7.27956], [33.75879, -7.27613], [33.7545, -7.27355], [33.75022, -7.27183],
+      [33.74523, -7.27012], [33.74309, -7.27441], [33.74023, -7.27956], [33.73666, -7.28471],
+      [33.73309, -7.28986], [33.73024, -7.29501], [33.72596, -7.30187], [33.72167, -7.30874],
+      [33.71739, -7.31561], [33.7131, -7.32076], [33.705, -7.33485], [33.69786, -7.34858],
+      [33.69286, -7.36232], [33.69358, -7.37433], [33.69786, -7.38292], [33.70358, -7.38549],
+      [33.709, -7.38377], [33.70957, -7.37691], [33.71015, -7.36918], [33.71157, -7.3606],
+    ],
+  },
+  // Table bookings (/reserver/): half-hour slots from first to last, up to maxPeople per booking, up to maxDays ahead.
+  booking: { first: "12:00", last: "23:00", maxPeople: 20, maxDays: 60 },
   // How the customer pays.
   payment: { delivery: ["cash"], pickup: ["cash", "card"] },
-  // Hero picture or video, once the owner sends one. null = the drawn pizza.
-  // e.g. { image: "/assets/hero/hero.webp" } or { video: "/assets/hero/hero.mp4", poster: "/assets/hero/hero.webp" }
-  heroMedia: null,
+  // Hero picture: the Peperoni from the owner's menu (cut out round, it turns slowly; spin: false stops it).
+  // A video also works: { video: "/assets/hero/hero.mp4", poster: "/assets/hero/hero.webp" }. null = the drawn pizza.
+  heroMedia: { image: "/assets/hero/pizza-peperoni.webp", small: "/assets/hero/pizza-peperoni-400.webp", spin: true },
   // Online orders.
   //  - supabaseUrl empty = DEMO MODE: orders stay in this browser (localStorage). Open /commandes/ in another tab of
   //    the same browser to play the restaurant. Nothing leaves the phone.
