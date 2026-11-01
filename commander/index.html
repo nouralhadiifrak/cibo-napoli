@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="fr" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Commander en ligne · Cibo Napoli · Pizzas, pâtes fraîches, livraison El Mansouria</title>
+  <meta name="description" content="Commandez chez Cibo Napoli : pizzas napolitaines, pâtes fraîches, ravioli, lasagne et desserts, à emporter ou en livraison à El Mansouria. Suivi de la commande en direct.">
+  <link rel="canonical" href="https://cibo-napoli.vercel.app/commander/">
+  <link rel="alternate" hreflang="fr" href="https://cibo-napoli.vercel.app/commander/">
+  <link rel="alternate" hreflang="en" href="https://cibo-napoli.vercel.app/commander/?lang=en">
+  <link rel="alternate" hreflang="x-default" href="https://cibo-napoli.vercel.app/commander/">
+  <meta name="theme-color" content="#1e5c34">
+  <!-- dark mode before the first paint: the saved choice, or the phone's setting the first time -->
+  <script>try{var cnT=localStorage.getItem("cibo.theme");cnT=cnT?JSON.parse(cnT):(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",cnT)}catch(e){}</script>
+
+  <meta property="og:type" content="restaurant">
+  <meta property="og:site_name" content="Cibo Napoli">
+  <meta property="og:title" content="Commander en ligne · Cibo Napoli · Pizzas, pâtes fraîches, livraison El Mansouria">
+  <meta property="og:description" content="Commandez chez Cibo Napoli : pizzas napolitaines, pâtes fraîches, ravioli, lasagne et desserts, à emporter ou en livraison à El Mansouria. Suivi de la commande en direct.">
+  <meta property="og:url" content="https://cibo-napoli.vercel.app/commander/">
+  <meta property="og:image" content="https://cibo-napoli.vercel.app/assets/share.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="fr_MA">
+  <meta property="og:locale:alternate" content="en_GB">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" href="/assets/icons/icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Cibo Napoli">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <link rel="preload" href="/assets/fonts/playfair-display-italic-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" as="image" href="/assets/brand/logo-white.webp" fetchpriority="high">
+  <link rel="stylesheet" href="/css/style.css?v=2">
+  <noscript><style>.intro{display:none}</style></noscript>
+</head>
+<body data-page="order">
+  <a class="skip-link" href="#menu" data-i18n="nav.menu">La carte</a>
+  <header class="topbar">
+    <div class="topbar__in">
+      <button class="icon-btn burger" type="button" data-nav-toggle aria-controls="nav-panel" aria-expanded="false" data-i18n-aria="nav.open"><span></span><span></span><span></span></button>
+      <a class="brand" href="/" data-keep-lang aria-label="Cibo Napoli">
+        <img class="brand__logo" src="/assets/brand/logo-white.webp" alt="Cibo Napoli" width="640" height="182">
+      </a>
+      <nav class="topnav" aria-label="Menu">
+        <a href="/" data-keep-lang data-i18n="nav.home">Accueil</a>
+        <a href="/commander/" data-keep-lang data-i18n="nav.order">Commander</a>
+        <a href="/reserver/" data-keep-lang data-i18n="nav.book">Réserver</a>
+        <a href="/#histoire" data-keep-lang data-i18n="nav.story">Notre histoire</a>
+        <a href="/#avis" data-keep-lang data-i18n="nav.reviews">Avis</a>
+        <a href="/#infos" data-keep-lang data-i18n="nav.info">Infos</a>
+      </nav>
+      <div class="topbar__actions">
+        <button class="install-btn" type="button" data-install hidden><img src="/assets/icons/icon-192.png" alt="" width="26" height="26"><span data-i18n="nav.install">Installer</span></button>
+        <button class="icon-btn theme-btn" type="button" data-theme-toggle aria-pressed="false" data-i18n-aria="nav.dark"><svg class="theme-btn__moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><svg class="theme-btn__sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+        <div class="lang" role="group" data-i18n-aria="nav.lang">
+          <a data-lang-link="fr" href="?">FR</a>
+          <a data-lang-link="en" href="?lang=en">EN</a>
+        </div>
+        <button class="icon-btn cart-btn" type="button" data-open-cart data-i18n-aria="nav.cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 11.1a2 2 0 0 1-2 1.9H8.2a2 2 0 0 1-2-1.9L5 8zM9 8V6a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg><span class="badge js-cart-count" hidden>0</span></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- phones: the ☰ menu -->
+  <div class="layer navpanel" id="nav-panel" hidden>
+    <div class="layer__shade" data-close></div>
+    <nav class="navpanel__panel" aria-label="Menu">
+      <div class="navpanel__head">
+        <img src="/assets/brand/logo-white.webp" alt="Cibo Napoli" width="640" height="182">
+        <button class="layer__x" type="button" data-close data-i18n-aria="nav.close">×</button>
+      </div>
+      <div class="navpanel__links">
+        <a href="/" data-keep-lang data-i18n="nav.home">Accueil</a>
+        <a href="/commander/" data-keep-lang data-i18n="nav.order">Commander</a>
+        <a href="/reserver/" data-keep-lang data-i18n="nav.book">Réserver</a>
+        <a href="/#histoire" data-keep-lang data-i18n="nav.story">Notre histoire</a>
+        <a href="/#avis" data-keep-lang data-i18n="nav.reviews">Avis</a>
+        <a href="/#infos" data-keep-lang data-i18n="nav.info">Infos</a>
+      </div>
+      <div class="navpanel__tools">
+        <div class="lang lang--panel" role="group" data-i18n-aria="nav.lang">
+          <a data-lang-link="fr" href="?">Français</a>
+          <a data-lang-link="en" href="?lang=en">English</a>
+        </div>
+        <button class="btn btn--line btn--block theme-btn theme-btn--text" type="button" data-theme-toggle aria-pressed="false"><svg class="theme-btn__moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><svg class="theme-btn__sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="theme-btn__text" data-i18n="nav.dark">Mode sombre</span></button>
+        <button class="btn btn--red btn--block install-btn install-btn--panel" type="button" data-install hidden><img src="/assets/icons/icon-192.png" alt="" width="26" height="26"><span data-i18n="nav.install">Installer</span></button>
+      </div>
+    </nav>
+  </div>
+
+  <main id="top">
+    <section class="menu" id="menu" aria-labelledby="menu-title">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="eyebrow">Cibo Napoli</p>
+          <h1 class="section-title" id="menu-title" data-i18n="menu.title">La carta</h1>
+          <p class="section-lead" data-i18n="menu.lead">Pâte napolitaine, produits italiens et pâtes fraîches. Touchez une catégorie.</p>
+          <p class="status" data-status><span class="status__dot" aria-hidden="true"></span><span class="status__text"></span></p>
+        </header>
+        <div class="cat-tiles" id="cat-tiles"></div>
+      </div>
+      <nav class="chips-bar" aria-labelledby="chips-label">
+        <span class="visually-hidden" id="chips-label" data-i18n="menu.allCats">Catégories</span>
+        <div class="chips" id="cat-chips"></div>
+      </nav>
+      <div class="wrap" id="menu-sections"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="checkers checkers--top" aria-hidden="true"></div>
+    <div class="wrap footer__in">
+      <img class="footer__logo" src="/assets/brand/logo-white.webp" alt="Cibo Napoli" width="640" height="182" loading="lazy">
+      <nav class="footer__links">
+        <a href="/commander/" data-keep-lang data-i18n="nav.order">Commander</a>
+        <a href="/reserver/" data-keep-lang data-i18n="nav.book">Réserver</a>
+        <a href="/confidentialite/" data-keep-lang data-i18n="footer.privacy">Confidentialité</a>
+        <a href="/conditions/" data-keep-lang data-i18n="footer.terms">Conditions de vente</a>
+        <a data-insta href="#" target="_blank" rel="noopener">Instagram</a>
+        <a href="/commandes/" data-i18n="footer.staff">Espace équipe</a>
+      </nav>
+      <p class="footer__copy">© <span id="year"></span> Cibo Napoli · El Mansouria. <span data-i18n="footer.rights">Tous droits réservés.</span></p>
+    </div>
+  </footer>
+
+  <!-- phones: the cart bar at the bottom -->
+  <button class="cart-bar" id="cart-bar" type="button" data-open-cart hidden>
+    <span class="cart-bar__count"></span>
+    <span class="cart-bar__label" data-i18n="cart.view">Voir le panier</span>
+    <span class="cart-bar__total"></span>
+  </button>
+
+  <!-- options asked before adding (pasta shape) -->
+  <div class="layer sheet" id="options" role="dialog" aria-modal="true" aria-labelledby="opt-title" hidden>
+    <div class="layer__shade" data-close></div>
+    <div class="sheet__panel">
+      <button class="layer__x" type="button" data-close data-i18n-aria="opt.close">×</button>
+      <div class="sheet__media"></div>
+      <h3 class="sheet__title" id="opt-title"></h3>
+      <p class="sheet__desc"></p>
+      <p class="sheet__group-title"></p>
+      <div class="sheet__choices" role="radiogroup"></div>
+      <p class="sheet__error" role="alert"></p>
+      <button class="btn btn--red btn--block sheet__add" type="button"></button>
+    </div>
+  </div>
+
+  <!-- the cart -->
+  <div class="layer drawer" id="cart" role="dialog" aria-modal="true" aria-labelledby="cart-title" hidden>
+    <div class="layer__shade" data-close></div>
+    <div class="drawer__panel">
+      <header class="drawer__head">
+        <h2 id="cart-title" data-i18n="cart.title">Votre commande</h2>
+        <button class="layer__x" type="button" data-close data-i18n-aria="cart.close">×</button>
+      </header>
+      <div class="drawer__body">
+        <div class="cart-empty">
+          <div class="cart-empty__art" id="cart-empty-art"></div>
+          <p data-i18n="cart.empty">Votre panier est vide.</p>
+          <a class="btn btn--green" id="cart-empty-cta" href="#menu" data-i18n="cart.emptyCta">Voir la carte</a>
+        </div>
+        <form id="order-form" class="order" novalidate>
+          <ul class="lines" id="cart-lines"></ul>
+          <label class="field">
+            <span class="field__label" data-i18n="cart.notes">Une précision pour la cuisine ?</span>
+            <textarea name="notes" rows="2" maxlength="300" data-i18n-ph="cart.notesPh"></textarea>
+          </label>
+
+          <fieldset class="block">
+            <legend data-i18n="cart.mode">Comment ?</legend>
+            <div class="seg">
+              <label><input type="radio" name="mode" value="pickup"><span data-i18n="cart.pickup">À emporter</span></label>
+              <label><input type="radio" name="mode" value="delivery"><span data-i18n="cart.delivery">Livraison</span></label>
+            </div>
+            <p class="hint" id="pickup-hint" data-i18n="cart.pickupHint">Vous récupérez la commande au restaurant.</p>
+            <div id="delivery-box" hidden>
+              <p class="hint" data-i18n="cart.mapHint">Touchez la carte pour placer votre position, ou utilisez le GPS.</p>
+              <div class="dmap" id="delivery-map"></div>
+              <button class="btn btn--line btn--sm" type="button" id="gps-btn">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <span data-i18n="cart.useGps">Utiliser ma position</span>
+              </button>
+              <p class="zone-msg" id="zone-msg" aria-live="polite"></p>
+              <label class="field">
+                <span class="field__label" data-i18n="cart.address">Adresse</span>
+                <textarea name="address" rows="2" maxlength="200" autocomplete="street-address" data-i18n-ph="cart.addressPh"></textarea>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset class="block">
+            <legend data-i18n="cart.you">Vos coordonnées</legend>
+            <label class="field">
+              <span class="field__label" data-i18n="cart.name">Prénom</span>
+              <input name="name" type="text" maxlength="60" autocomplete="given-name">
+            </label>
+            <label class="field">
+              <span class="field__label" data-i18n="cart.phone">Téléphone</span>
+              <input name="phone" type="tel" inputmode="tel" maxlength="20" autocomplete="tel" data-i18n-ph="cart.phonePh">
+              <span class="field__err" id="phone-err" aria-live="polite"></span>
+            </label>
+          </fieldset>
+
+          <div class="sums">
+            <div><span data-i18n="cart.subtotal">Sous-total</span><span id="sum-sub"></span></div>
+            <div id="sum-fee-row"><span data-i18n="cart.fee">Livraison</span><span id="sum-fee"></span></div>
+            <div class="sums__total"><span data-i18n="cart.total">Total</span><span id="sum-total"></span></div>
+          </div>
+          <p class="pay-note" id="pay-note"></p>
+          <p class="order__err" id="order-err" role="alert"></p>
+          <button class="btn btn--red btn--block btn--lg" id="order-btn" type="submit"></button>
+          <p class="order__legal" data-i18n-html="cart.legal"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- a dish photo, big -->
+  <div class="layer lightbox" id="lightbox" role="dialog" aria-modal="true" hidden>
+    <div class="layer__shade" data-close></div>
+    <figure class="lightbox__fig">
+      <img src="" alt="">
+      <figcaption class="lightbox__cap"></figcaption>
+      <button class="layer__x" type="button" data-close data-i18n-aria="photo.close">×</button>
+    </figure>
+  </div>
+
+  <!-- Instagram -->
+  <a class="ig-fab" data-insta href="https://www.instagram.com/cibo_napoli/" target="_blank" rel="noopener" data-i18n-aria="ig.label"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.3" cy="6.7" r="1.3" fill="currentColor"/></svg></a>
+
+  <!-- iPhone: how to install -->
+  <div class="layer sheet" id="ios-steps" role="dialog" aria-modal="true" aria-labelledby="ios-title" hidden>
+    <div class="layer__shade" data-close></div>
+    <div class="sheet__panel">
+      <button class="layer__x" type="button" data-close data-i18n-aria="opt.close">×</button>
+      <img class="ios__icon" src="/assets/icons/icon-192.png" alt="" width="72" height="72">
+      <h3 class="sheet__title" id="ios-title" data-i18n="install.ios.title">Installer sur iPhone</h3>
+      <ol class="ios__steps" id="ios-list"></ol>
+      <button class="btn btn--green btn--block" type="button" data-close data-i18n="install.ok">Compris</button>
+    </div>
+  </div>
+
+  <!-- install banner (Android, iPhone) -->
+  <div class="install-banner" id="install-banner" role="dialog" aria-labelledby="ib-title">
+    <img src="/assets/icons/icon-192.png" alt="" width="48" height="48">
+    <div class="install-banner__text"><strong id="ib-title" data-i18n="install.title">Cibo Napoli sur votre écran d'accueil</strong><span data-i18n="install.text"></span></div>
+    <div class="install-banner__btns">
+      <button class="btn btn--sm btn--ghost" type="button" id="install-later" data-i18n="install.later">Plus tard</button>
+      <button class="btn btn--sm btn--red" type="button" id="install-go" data-i18n="install.cta">Installer</button>
+    </div>
+  </div>
+
+  <div class="tracker" id="tracker" hidden></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <noscript><p class="noscript">Activez JavaScript pour commander, ou appelez le 06 34 23 53 50.</p></noscript>
+  <script src="/js/config.js?v=2"></script>
+  <script src="/js/i18n.js?v=2"></script>
+  <script src="/js/menu-data.js?v=2"></script>
+  <script src="/js/art.js?v=2"></script>
+  <script src="/js/orders.js?v=2"></script>
+  <script src="/js/common.js?v=2"></script>
+  <script src="/js/order.js?v=2"></script>
+</body>
+</html>

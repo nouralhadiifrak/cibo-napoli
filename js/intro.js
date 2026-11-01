@@ -1,5 +1,5 @@
 /*
- * Cibo Napoli: the opening animation (about 1.6 s). The logo appears on green with the tagline, then glides
+ * Cibo Napoli: the opening animation (about 3 s). The logo appears on green with the tagline, then glides
  * into its place in the header while the green lifts away. A tap, a click or a key skips it. It plays once per
  * visit (sessionStorage), never with "reduce motion", and not at ?intro=0 (tests).
  * Kept on its own so the animation can be reworked later without touching the rest of the site.
@@ -42,11 +42,11 @@
     const dy = b.top + b.height / 2 - (a.top + a.height / 2);
     intro.classList.add("is-flying");
     logo.style.transform = `translate(${dx}px, ${dy}px) scale(${s})`;
-    timers.push(setTimeout(finish, 520));
+    timers.push(setTimeout(finish, 720));
   };
-  timers.push(setTimeout(fly, 1000));
+  timers.push(setTimeout(fly, 2250));
   ["pointerdown", "keydown", "wheel", "touchstart"].forEach((ev) => window.addEventListener(ev, finish, { once: true, passive: true }));
   intro.querySelector(".intro__skip").addEventListener("click", finish);
   // never block the page, whatever happens
-  timers.push(setTimeout(finish, 1900));
+  timers.push(setTimeout(finish, 3300));
 })();

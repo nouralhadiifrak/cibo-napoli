@@ -6,17 +6,29 @@ Plain HTML, CSS and JavaScript, no framework and no build step.
 > **Status: demo.** Hosted on Vercel for now (to show the owner), moving to Cloudflare Pages before real use.
 > Orders run in **demo mode**: they stay in the browser (see "Online orders"). Supabase comes after the owner says yes.
 
-- French by default, English at `/?lang=en` (FR / EN switch in the header)
-- Intro (about 1.6 s, a tap skips it): the logo on green, then it glides into the header (`js/intro.js`)
-- Hero: « Le goût de l'Italie dans votre assiette », Order / See the menu, open/closed status. A drawn pizza
-  until the owner sends a photo or video (`heroMedia` in `js/config.js`; a still image stays if autoplay is blocked)
-- Menu: 7 category tiles, a sticky category bar, 45 dishes (2 per row on phones), each with its description and
-  price in DH. Fresh pasta asks for the shape (fusilli, spaghetti, tagliatelle) before it goes in the cart.
+Three pages: **home** `/`, **order** `/commander/`, **book a table** `/reserver/` (plus privacy and terms).
+
+- French by default, English at `?lang=en` (FR / EN switch in the header)
+- Header: ☰ menu on phones (all the titles, language, dark mode, install), titles in the middle on PC;
+  dark mode button (remembered on the phone; the first time it follows the phone's setting);
+  « Installer » button with the app icon when the phone can install the app
+- Intro on the home page (about 3 s, a tap skips it): the logo on green, then it glides into the header (`js/intro.js`)
+- Home: « Le goût de l'Italie dans votre assiette », buttons La carte / Réserver side by side and Itinéraire under
+  them, a turning pizza photo (the Peperoni cut from the owner's menu, `heroMedia` in `js/config.js`), then our
+  story, Google reviews, info and the map with the delivery zone
+- Order page: 7 category tiles, a sticky category bar, 45 dishes (2 per row on phones), each with its description
+  and price in DH. Fresh pasta asks for the shape (fusilli, spaghetti, tagliatelle) before it goes in the cart.
   A dish with a photo opens it big (click on PC, long press on phones); a dish without one shows a drawn tile
-- Cart: pickup or delivery (map, GPS or tap, up to 4 km, 10 DH), clear total, payment note
+- Cart: pickup or delivery (map, GPS or tap, inside the drawn zone, 10 DH), clear total, payment note
 - « Commander » sends the order to the staff screen, then a live tracking panel; WhatsApp only as the way out
-- Our story, Google reviews, info and map, privacy and terms of sale pages
+- Booking page: day (next 14 days, or a date up to 60 days ahead), half-hour time 12:00 – 23:00, people (1 – 20),
+  children, name, phone, note. The request goes to the staff screen
+- Floating Instagram button on every page
 - Installable app (PWA), schema.org data, sitemap, share image
+
+**Delivery zone:** drawn by the owner on the map (El Mansouria along the coast, plus the east of Mohammedia), never
+more than 8 km from the restaurant, 10 DH. The corners are `delivery.zone` in `js/config.js` (and `zone` in the
+`locations` table of the database, which checks every delivery order again).
 
 ## Online orders
 
@@ -33,6 +45,9 @@ client, phone, address, map link and amount to collect; the staff pick the drive
 An accepted order can be cancelled with a reason. Orders older than 24 h are hidden.
 « Statistiques »: orders, revenue, average basket, delivery vs pickup, best sellers, orders per hour (one day) or
 revenue per day (week, month); a service day runs 06:00 → 06:00.
+« Réservations »: the requests from `/reserver/` (a new one rings once and shows a badge). Each one: 📞 Appeler,
+Confirmer, Confirmer + WhatsApp (opens WhatsApp with the confirmation already written to the customer, in their
+language), Refuser (with a reason, and an optional WhatsApp message). Confirmed ones can be cancelled.
 The **owner's account** opens on the statistics and has no pop-up, sound or buttons.
 
 ### Demo mode (now)
@@ -78,11 +93,13 @@ Security headers (both hosts): `X-Content-Type-Options: nosniff`, `X-Frame-Optio
 
 | What | File |
 | --- | --- |
-| Restaurant details (phone, WhatsApp, Instagram, address, map pin), hours, delivery (km, fee), payment, hero media, site address, Supabase | `js/config.js` |
+| Restaurant details (phone, WhatsApp, Instagram, address, map pin), hours, delivery (zone, km, fee), bookings (times, people), payment, hero photo, site address, Supabase | `js/config.js` |
 | Menu: categories, dishes, descriptions, prices, options (pasta shape) | `js/menu-data.js` |
 | Reviews shown on the site | `js/reviews.js` |
 | Interface text (French / English) | `js/i18n.js` |
-| Page logic (menu, cart, map, order, tracking, install) | `js/app.js` |
+| Shared page logic (header, dark mode, install, maps, tracker, home page) | `js/common.js` |
+| Order page (menu, cart, delivery map, order) | `js/order.js` + `commander/index.html` |
+| Booking page | `js/reserve.js` + `reserver/index.html` |
 | Where orders go (demo / Supabase) | `js/orders.js` |
 | Intro animation | `js/intro.js` + `.intro` in `css/style.css` |
 | Drawn placeholders (pizza, pasta…) | `js/art.js` |

@@ -20,16 +20,21 @@ Animations will be reworked later (intro in js/intro.js, kept separate on purpos
 
 - Hours: every day 12:00 – 00:00.
 - Phone and WhatsApp: 0634235350 for everything for now (also the test number).
-- Delivery: up to 4 km around the restaurant, 10 DH flat. No minimum order.
+- Delivery: the zone the owner drew (El Mansouria along the coast + east of Mohammedia), max 8 km, 10 DH. No minimum order.
+- Pages: home (no menu on it), /commander/ (menu + order), /reserver/ (table booking, confirmed by the staff by call or WhatsApp).
 - Payment: cash on delivery; cash or card for pickup.
 - Drinks: Hawai, Coca-Cola, Sprite, Schweppes, Poms; no size mentioned.
 - Two accounts later: one owner, one staff.
-- Hero photo/video: later. Domain: not bought yet.
+- Hero: the Peperoni from the menu scan, enlarged (soft); replace with the original photo when it comes. Domain: not bought yet.
+- Intro: about 3 s. Dark mode button in the header.
 - Google Maps: https://maps.app.goo.gl/SZC2hhTLup2dU2f38 (pin 33.7372332, -7.3142341; Place ID ChIJWcsRBQCxpw0RGfvunC8altw).
 
 ## Still open
 
 - Drink prices (shown as « Prix bientôt », not orderable).
+- Is 10 DH right for the whole new zone (up to 8 km)?
+- Booking times assumed 12:00 – 23:00, up to 20 people, up to 60 days ahead.
+- Item 8 of the second modification list was empty.
 - Street address (the Google profile is being fixed).
 - Arrabiata Fuoco description: the menu scan reads « piment mester ail »; written as « piment, ail ». To confirm.
 - Pasta shape choice (fusilli/spaghetti/tagliatelle) assumed for all « Pasta fresca »; not for ravioli, lasagna, plats.

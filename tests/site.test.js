@@ -24,6 +24,8 @@ const OPEN_TIME = new Date("2026-11-02T19:00:00Z");
 const CLOSED_TIME = new Date("2026-11-02T03:00:00Z");
 const NEAR = { latitude: 33.7450, longitude: -7.3050 }; // about 1.2 km from the restaurant
 const FAR = { latitude: 33.5890, longitude: -7.6030 };  // Casablanca centre, about 32 km
+const MOHA = { latitude: 33.7000, longitude: -7.3700 }; // east of Mohammedia, inside the drawn zone (6.6 km)
+const SOUTH = { latitude: 33.7050, longitude: -7.2900 }; // 4.2 km inland, outside the drawn zone
 
 function serve() {
   return new Promise((resolve) => {
@@ -80,17 +82,20 @@ async function run() {
       const tag = `${lang}-${width}`;
       const q = lang === "en" ? "?lang=en" : "?";
       const T = lang === "en"
-        ? { title: "The taste of Italy on your plate", order: "Order", pasta: "Which pasta?", added: "added", accepted: "Accepted", done: "Buon appetito!", cancelled: "Order cancelled", outZone: "outside the area", closed: "Closed", review: "Write a Google review" }
-        : { title: "Le goût de l'Italie dans votre assiette", order: "Commander", pasta: "Quelle pâte ?", added: "ajouté", accepted: "Acceptée", done: "Bon appétit !", cancelled: "Commande annulée", outZone: "hors zone", closed: "Fermé", review: "Laisser un avis Google" };
+        ? { title: "The taste of Italy on your plate", order: "Order", pasta: "Which pasta?", added: "added", accepted: "Accepted", done: "Buon appetito!", cancelled: "Order cancelled", outZone: "outside our delivery area", closed: "Closed", review: "Write a Google review", buttons: ["Menu", "Book a table", "Directions"], sent: "Request sent!", dark: "Light mode" }
+        : { title: "Le goût de l'Italie dans votre assiette", order: "Commander", pasta: "Quelle pâte ?", added: "ajouté", accepted: "Acceptée", done: "Bon appétit !", cancelled: "Commande annulée", outZone: "hors de notre zone", closed: "Fermé", review: "Laisser un avis Google", buttons: ["La carte", "Réserver", "Itinéraire"], sent: "Demande envoyée !", dark: "Mode clair" };
+      const amp = q === "?" ? "" : "&";
 
       section(`[${tag}] intro`);
       {
         const ctx = await newContext(browser, { width });
         const page = await open(ctx, `${BASE}/${q}`);
         check(await page.isVisible(".intro"), "the intro shows the logo");
-        await page.clock.runFor(2100);
+        await page.clock.runFor(1500);
+        check(await page.isVisible(".intro"), "the intro is still there at 1.5 s");
+        await page.clock.runFor(1900);
         await page.waitForTimeout(450);
-        check(!(await page.$(".intro")), "the intro is gone after 2 s at most");
+        check(!(await page.$(".intro")), "the intro is gone after about 3 s");
         check(await page.$eval(".brand__logo", (e) => getComputedStyle(e).opacity === "1"), "the logo is in the header");
         await ctx.close();
         const ctx2 = await newContext(browser, { width });
@@ -101,17 +106,54 @@ async function run() {
         await ctx2.close();
       }
 
-      section(`[${tag}] page, menu and cart`);
+      section(`[${tag}] home page, header, dark mode`);
+      {
+        const c = await newContext(browser, { width });
+        const h = await open(c, `${BASE}/${q}${amp}intro=0`);
+        check(await h.getAttribute("html", "lang") === lang, `html lang is ${lang}`);
+        check((await h.textContent(".hero__title")).trim() === T.title, "hero title");
+        check(!(await h.$(".hero__kicker")), "no « pizzeria napolitaine » line above the title");
+        const btns = await h.$$eval(".hero__cta .btn", (b) => b.map((x) => ({ t: x.textContent.trim(), top: Math.round(x.getBoundingClientRect().top), href: x.getAttribute("href") })));
+        check(btns.length === 3 && btns.map((b) => b.t).join("|") === T.buttons.join("|"), "3 hero buttons: menu, book, directions");
+        check(btns[0].top === btns[1].top && btns[2].top > btns[0].top, "two side by side, the third under them");
+        check(btns[0].href.startsWith("/commander/") && btns[1].href.startsWith("/reserver/") && /maps/.test(btns[2].href), "they open the order page, the booking page and Google Maps");
+        check(await h.$eval(".hero__pizza", (e) => e.tagName === "IMG" && /pizza/.test(e.src) && getComputedStyle(e).animationName === "spin"), "a real pizza photo that turns");
+        check(!(await h.$("#menu")), "no menu on the home page");
+        check(await h.$eval(".hero", (e) => e.nextElementSibling && e.nextElementSibling.id === "histoire"), "« Notre histoire » right under the hero");
+        check(/Cibo Napoli/.test(await h.title()), "page title");
+        check(await h.$eval('link[rel="canonical"]', (l) => /^https:\/\//.test(l.href)), "canonical link");
+        check(await h.$$eval('script[type="application/ld+json"]', (s) => s.some((x) => /"Restaurant"/.test(x.textContent))), "schema.org Restaurant data");
+        check(await h.$eval(".status", (e) => e.classList.contains("is-open")), "open at 20:00");
+        check(await h.isVisible(".ig-fab") && /instagram\.com\/cibo_napoli/.test(await h.getAttribute(".ig-fab", "href")), "floating Instagram button");
+        if (width === 390) {
+          check(await h.isVisible(".burger") && !(await h.isVisible(".topnav")), "phones: ☰ button instead of the links");
+          await h.click(".burger");
+          await h.waitForSelector("#nav-panel.is-open");
+          check(await h.$$eval("#nav-panel .navpanel__links a", (a) => a.length) === 6, "the ☰ menu holds all the titles");
+          await shot(h, `${tag}-nav`);
+          await h.click("#nav-panel [data-theme-toggle]");
+        } else {
+          check(!(await h.isVisible(".burger")) && await h.isVisible(".topnav"), "PC: the titles in the header");
+          const nav = await h.$eval(".topnav", (n) => { const r = n.getBoundingClientRect(); return Math.abs(r.left + r.width / 2 - innerWidth / 2); });
+          check(nav < 4, "PC: the titles in the middle of the header");
+          await h.click(".topbar [data-theme-toggle]");
+        }
+        check(await h.getAttribute("html", "data-theme") === "dark", "the dark mode button turns the site dark");
+        check(await h.evaluate(() => getComputedStyle(document.body).backgroundColor) !== "rgb(251, 246, 236)", "dark background");
+        await h.reload();
+        check(await h.getAttribute("html", "data-theme") === "dark", "dark mode is remembered");
+        check((await h.getAttribute("[data-theme-toggle]", "aria-label")) === T.dark, "…and the button offers light mode");
+        await shot(h, `${tag}-home-dark`);
+        check(h.errors.length === 0, "no JavaScript errors on the home page" + (h.errors.length ? ": " + h.errors.join(" | ") : ""));
+        await c.close();
+      }
+
+      section(`[${tag}] order page: menu and cart`);
       const ctx = await newContext(browser, { width, geo: NEAR });
-      const page = await open(ctx, `${BASE}/${q}${q === "?" ? "" : "&"}intro=0`);
+      const page = await open(ctx, `${BASE}/commander/${q}`);
       await page.waitForSelector(".dish");
-      check(await page.getAttribute("html", "lang") === lang, `html lang is ${lang}`);
-      check((await page.textContent(".hero__title")).trim() === T.title, "hero title");
-      check(await page.$$eval(".hero__cta .btn", (b) => b.length) === 2, "two hero buttons");
-      check(/Cibo Napoli/.test(await page.title()), "page title");
-      check(await page.$eval('link[rel="canonical"]', (l) => /^https:\/\//.test(l.href)), "canonical link");
-      check(await page.$$eval('script[type="application/ld+json"]', (s) => s.some((x) => /"Restaurant"/.test(x.textContent))), "schema.org Restaurant data");
-      check(await page.$eval(".status", (e) => e.classList.contains("is-open")), "open at 20:00");
+      check(await page.$eval('link[rel="canonical"]', (l) => /\/commander\/$/.test(l.href)), "its own canonical address");
+      check(await page.$eval('.topnav a[href^="/commander/"]', (a) => a.getAttribute("aria-current") === "page"), "the menu marks the page");
       check(await page.$$eval(".cat-tile", (t) => t.length) === 7, "7 category tiles");
       check(await page.$$eval(".dish", (d) => d.length) === 45, "45 dishes");
       check(await page.$$eval(".dish", (d) => d.every((x) => x.querySelector(".dish__price"))), "every dish has a price (or « price soon »)");
@@ -159,6 +201,15 @@ async function run() {
       await page.click("#gps-btn");
       await page.waitForSelector("#zone-msg.is-bad", { timeout: 4000 }).catch(() => null);
       check((await page.textContent("#zone-msg")).includes(T.outZone), "an address 32 km away is refused");
+      check(await page.$eval("#delivery-map", (e) => !!e.querySelector("path.leaflet-interactive")), "the drawn delivery zone is on the map");
+      await ctx.setGeolocation(SOUTH);
+      await page.click("#gps-btn");
+      await page.waitForFunction(() => document.querySelector("#zone-msg").classList.contains("is-bad"), null, { timeout: 4000 }).catch(() => null);
+      check(await page.$eval("#zone-msg", (e) => e.classList.contains("is-bad")), "4 km inland, outside the drawn zone: refused");
+      await ctx.setGeolocation(MOHA);
+      await page.click("#gps-btn");
+      const moha = await page.waitForSelector("#zone-msg.is-ok", { timeout: 4000 }).catch(() => null);
+      check(!!moha, "east of Mohammedia (6.6 km), inside the zone: accepted");
       await ctx.setGeolocation(NEAR);
       await page.click("#gps-btn");
       const ok = await page.waitForSelector("#zone-msg.is-ok", { timeout: 4000 }).catch(() => null);
@@ -254,12 +305,62 @@ async function run() {
       await shot(page, `${tag}-full`, true);
       await ctx.close();
 
+      section(`[${tag}] table booking`);
+      {
+        const c = await newContext(browser, { width });
+        const b = await open(c, `${BASE}/reserver/${q}`);
+        check(await b.$$eval("#book-days .day", (d) => d.length) === 14, "the next 14 days");
+        check(!(await b.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)), "no sideways scrolling");
+        await b.click("#book-btn");
+        check((await b.textContent("#book-err")).length > 0, "a day must be chosen");
+        await b.click("#book-days .day:nth-child(2)");
+        check(await b.$$eval("#book-slots .slot", (s) => s.length) === 23, "half-hour times from 12:00 to 23:00");
+        await b.click('#book-slots [data-time="20:30"]');
+        for (let i = 0; i < 2; i++) await b.click("#people-more");
+        check((await b.textContent("#people-n")).trim() === "4", "4 people");
+        await b.click('.seg label:has-text("' + (lang === "en" ? "Yes" : "Oui") + '")');
+        check(await b.isVisible("#kids-box"), "children: how many");
+        await b.click("#kids-more");
+        check((await b.textContent("#kids-n")).trim() === "2", "2 children");
+        await b.fill('[name="name"]', "Test");
+        await b.fill('[name="phone"]', TEST_PHONE);
+        await b.fill('[name="notes"]', "Anniversaire");
+        await shot(b, `${tag}-book`, true);
+        await b.click("#book-btn");
+        await b.waitForSelector("#book-done:not([hidden])");
+        check((await b.textContent("#book-done-title")).includes(T.sent), "the request is sent");
+        check((await b.textContent("#book-summary")).includes("20:30"), "with a summary");
+        await shot(b, `${tag}-book-done`);
+        check(b.errors.length === 0, "no JavaScript errors on the booking page" + (b.errors.length ? ": " + b.errors.join(" | ") : ""));
+        if (await b.evaluate(() => window.ORDERS.demo)) {
+          const st = await open(c, `${BASE}/commandes/`);
+          await st.click('[data-demo-role="staff"]');
+          await st.click("#start-btn");
+          await st.click('[data-tab="book"]');
+          await st.waitForSelector("#list-bnew .bk");
+          const card = await st.textContent("#list-bnew .bk");
+          check(card.includes("20:30") && card.includes("4 personnes") && card.includes("dont 2 enfants") && card.includes("Anniversaire"), "the staff screen shows the request (time, people, children, note)");
+          check((await st.textContent("#count-book")).trim() === "1", "a badge counts the requests to confirm");
+          check(await st.$eval('#list-bnew a[href^="tel:"]', (a) => a.getAttribute("href") === "tel:0634235350"), "a call button");
+          await st.evaluate(() => { window.__opened = []; window.open = (u) => { window.__opened.push(u); return null; }; });
+          await st.click('[data-bk="confirm-wa"]');
+          const waUrl = decodeURIComponent((await st.evaluate(() => window.__opened[0])) || "");
+          check(/wa\.me\/212634235350/.test(waUrl) && waUrl.includes("20:30"), "« Confirmer + WhatsApp » writes the confirmation to the customer");
+          await st.waitForSelector("#list-bok .bk");
+          check(true, "the booking moves to « Confirmées »");
+          await shot(st, `${tag}-staff-bookings`, true);
+          check(st.errors.length === 0, "no JavaScript errors on the staff screen" + (st.errors.length ? ": " + st.errors.join(" | ") : ""));
+        }
+        await c.close();
+      }
+
       section(`[${tag}] closed hours, reduced motion`);
       {
         const c = await newContext(browser, { width, time: CLOSED_TIME, reducedMotion: "reduce" });
-        const p = await open(c, `${BASE}/${q}`);
-        check(!(await p.$(".intro")), "no intro with « reduce motion »");
-        check(await p.$eval(".status", (e) => e.classList.contains("is-closed")) && (await p.textContent(".status")).includes(T.closed), "closed at 04:00");
+        const home = await open(c, `${BASE}/${q}`);
+        check(!(await home.$(".intro")), "no intro with « reduce motion »");
+        check(await home.$eval(".status", (e) => e.classList.contains("is-closed")) && (await home.textContent(".status")).includes(T.closed), "closed at 04:00");
+        const p = await open(c, `${BASE}/commander/${q}`);
         await p.click('[data-add="bella-margarita"]');
         await p.click(".cart-btn");
         check(await p.$eval("#order-btn", (b) => b.disabled), "ordering is off while closed");
@@ -299,11 +400,11 @@ async function run() {
   {
     const c = await newContext(browser, { width: 390 });
     for (const lang of ["fr", "en"]) {
-      for (const pth of ["/", "/confidentialite/", "/conditions/"]) {
+      for (const pth of ["/", "/commander/", "/reserver/", "/confidentialite/", "/conditions/"]) {
         const p = await open(c, `${BASE}${pth}${lang === "en" ? "?lang=en&intro=0" : "?intro=0"}`);
         const links = await p.$$eval(".footer a", (a) => a.map((x) => x.getAttribute("href")));
         check(links.some((h) => h.startsWith("/confidentialite/")) && links.some((h) => h.startsWith("/conditions/")), `${pth} (${lang}): footer links to privacy and terms`);
-        if (pth !== "/") {
+        if (pth === "/confidentialite/" || pth === "/conditions/") {
           check(await p.$eval(`article[lang="${lang}"]`, (a) => a.offsetHeight > 0) && await p.$eval(`article[lang="${lang === "en" ? "fr" : "en"}"]`, (a) => a.offsetHeight === 0), `${pth} (${lang}): shown in ${lang}`);
           await shot(p, `page-${pth.replace(/\//g, "")}-${lang}`, true);
         }
@@ -314,9 +415,10 @@ async function run() {
     const priv = await (await c.request.get(`${BASE}/confidentialite/`)).text();
     check(/24 heures/.test(priv) && /Supabase/.test(priv) && /CNDP/.test(priv) && /09-08/.test(priv), "privacy page: 24 h, hosting, CNDP, law 09-08");
     const cgv = await (await c.request.get(`${BASE}/conditions/`)).text();
-    check(/31-08/.test(cgv) && /10 DH/.test(cgv) && /espèces/.test(cgv), "terms page: law 31-08, delivery fee, payment");
+    check(/31-08/.test(cgv) && /10 DH/.test(cgv) && /espèces/.test(cgv) && /Réservations/.test(cgv), "terms page: law 31-08, delivery fee, payment, bookings");
+    check(/réservation/i.test(priv), "privacy page: bookings");
     check(!/conforme|compliant/i.test(priv + cgv), "no claim of being « compliant »");
-    for (const f of ["/site.webmanifest", "/sw.js", "/commandes/staff.webmanifest", "/commandes/sw.js", "/robots.txt", "/sitemap.xml", "/assets/share.jpg", "/favicon.ico", "/avis/el-mansouria/"]) {
+    for (const f of ["/site.webmanifest", "/sw.js", "/commandes/staff.webmanifest", "/commandes/sw.js", "/robots.txt", "/sitemap.xml", "/assets/share.jpg", "/favicon.ico", "/avis/el-mansouria/", "/commander/", "/reserver/", "/assets/hero/pizza-peperoni.webp"]) {
       check((await c.request.get(BASE + f)).ok(), `${f} is served`);
     }
     const man = await (await c.request.get(`${BASE}/site.webmanifest`)).json();
