@@ -1,0 +1,14 @@
+/* Cibo Napoli: simple text pages (privacy, terms, 404). Loaded after style.css. */
+.page-top { background: var(--green); }
+.page-top__in { max-width: 860px; margin: 0 auto; height: var(--top-h); padding: 0 16px; display: flex; align-items: center; justify-content: space-between; }
+.page-top img { height: 40px; width: auto; }
+.doc { max-width: 860px; margin: 0 auto; padding: 28px 16px 60px; }
+.doc h1 { font-family: var(--serif); font-style: italic; font-weight: 600; font-size: 38px; line-height: 1.1; color: var(--green-deep); margin: 0 0 6px; }
+.doc h2 { font-family: var(--serif); font-size: 22px; margin: 28px 0 8px; color: var(--green-deep); }
+.doc p, .doc li { color: #3a362d; }
+.doc .updated { color: var(--muted); font-size: 14px; margin-top: 0; }
+.doc .todo { background: #fff3cd; padding: 0 6px; border-radius: 6px; }
+.doc table { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 15px; }
+.doc th, .doc td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.doc .back { display: inline-block; margin-top: 24px; }
+html[lang="fr"] [lang="en"].tr, html[lang="en"] [lang="fr"].tr { display: none; }

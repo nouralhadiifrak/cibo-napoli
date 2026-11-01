@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://cibo-napoli.vercel.app/</loc>
+    <lastmod>2026-11-01</lastmod>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cibo-napoli.vercel.app/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cibo-napoli.vercel.app/?lang=en"/>
+  </url>
+  <url>
+    <loc>https://cibo-napoli.vercel.app/?lang=en</loc>
+    <lastmod>2026-11-01</lastmod>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cibo-napoli.vercel.app/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cibo-napoli.vercel.app/?lang=en"/>
+  </url>
+  <url>
+    <loc>https://cibo-napoli.vercel.app/confidentialite/</loc>
+    <lastmod>2026-11-01</lastmod>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://cibo-napoli.vercel.app/conditions/</loc>
+    <lastmod>2026-11-01</lastmod>
+    <priority>0.3</priority>
+  </url>
+</urlset>

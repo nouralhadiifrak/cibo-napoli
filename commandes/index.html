@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Commandes · Cibo Napoli</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#1c1c1e">
+  <link rel="icon" href="/assets/icons/staff-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="/assets/icons/staff-apple-touch-icon.png">
+  <link rel="manifest" href="/commandes/staff.webmanifest">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="CN Commandes">
+  <link rel="stylesheet" href="/commandes/commandes.css?v=1">
+</head>
+<body>
+  <!-- Sign in -->
+  <section class="screen" id="login" hidden>
+    <div class="card login">
+      <img class="login__logo" src="/assets/brand/logo-white.webp" alt="Cibo Napoli" width="640" height="182">
+      <h1>Espace équipe</h1>
+      <form id="login-form" autocomplete="on">
+        <label>E-mail<input name="email" type="email" autocomplete="username" required></label>
+        <label>Mot de passe<input name="password" type="password" autocomplete="current-password" required></label>
+        <button class="btn btn--red btn--block" id="login-btn" type="submit">Se connecter</button>
+      </form>
+      <div id="demo-login" hidden>
+        <p class="demo-note">Mode démo : les commandes restent dans ce navigateur. Passez une commande sur <a href="/" target="_blank" rel="noopener">le site</a> dans un autre onglet.</p>
+        <button class="btn btn--red btn--block" type="button" data-demo-role="staff">Entrer comme l'équipe</button>
+        <button class="btn btn--line btn--block" type="button" data-demo-role="owner">Entrer comme le propriétaire</button>
+      </div>
+      <p class="login__err" id="login-error" role="alert"></p>
+    </div>
+  </section>
+
+  <!-- Start of service: one tap lets the page ring and keeps the screen awake -->
+  <section class="screen" id="start" hidden>
+    <div class="card start">
+      <p class="start__place" id="start-place"></p>
+      <button class="btn btn--red btn--xl" id="start-btn" type="button">Démarrer le service</button>
+      <p class="muted">Le son et l'écran allumé ont besoin d'un toucher pour démarrer.</p>
+    </div>
+  </section>
+
+  <!-- The app -->
+  <section id="app" hidden>
+    <header class="bar">
+      <img class="bar__logo" src="/assets/brand/logo-white.webp" alt="Cibo Napoli" width="640" height="182">
+      <div class="bar__place"><span id="place"></span><span class="pill pill--demo" id="demo-pill" hidden>DÉMO</span></div>
+      <nav class="tabs" role="tablist">
+        <button role="tab" type="button" data-tab="orders" aria-selected="true">Commandes <span class="tabs__n" id="count-new" hidden></span></button>
+        <button role="tab" type="button" data-tab="stats" aria-selected="false">Statistiques</button>
+      </nav>
+      <button class="bar__menu" type="button" id="menu-btn" aria-haspopup="true" aria-expanded="false" aria-label="Menu">☰</button>
+      <div class="menu" id="menu" hidden>
+        <button type="button" data-act="sound" class="staff-only">🔔 Tester la sonnerie</button>
+        <button type="button" data-act="push" class="staff-only">📲 Activer les notifications</button>
+        <button type="button" data-act="push-test" class="staff-only">Envoyer une notification test</button>
+        <button type="button" data-act="install" id="install-btn" hidden>⬇︎ Installer l'app</button>
+        <button type="button" data-act="seed" class="demo-only">Remplir avec des exemples (démo)</button>
+        <button type="button" data-act="clear" class="demo-only">Effacer les commandes de démo</button>
+        <button type="button" data-act="logout">Se déconnecter</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <div id="tab-orders" role="tabpanel">
+        <p class="offline" id="offline" hidden>Connexion perdue · nouvelle tentative…</p>
+        <section class="col">
+          <h2>Nouvelles <span class="count" id="n-new"></span></h2>
+          <div class="list" id="list-new"></div>
+        </section>
+        <section class="col">
+          <h2>En cours <span class="count" id="n-doing"></span></h2>
+          <div class="list" id="list-doing"></div>
+        </section>
+        <section class="col">
+          <h2>Terminées (24 h) <span class="count" id="n-done"></span></h2>
+          <div class="list" id="list-done"></div>
+        </section>
+      </div>
+
+      <div id="tab-stats" role="tabpanel" hidden>
+        <div class="periods" id="periods" role="group" aria-label="Période">
+          <button type="button" data-p="today" aria-pressed="true">Aujourd'hui</button>
+          <button type="button" data-p="yesterday">Hier</button>
+          <button type="button" data-p="week">Cette semaine</button>
+          <button type="button" data-p="lastweek">Semaine dernière</button>
+          <button type="button" data-p="month">Ce mois</button>
+          <button type="button" data-p="lastmonth">Mois dernier</button>
+        </div>
+        <p class="muted" id="stats-range"></p>
+        <div class="tiles" id="stats-tiles"></div>
+        <div class="stats-grid">
+          <section class="panel"><h3>Meilleures ventes</h3><ol class="best" id="stats-best"></ol></section>
+          <section class="panel"><h3 id="stats-bars-title">Commandes par heure</h3><div class="bars" id="stats-bars"></div></section>
+        </div>
+        <p class="muted small">Chiffre d'affaires = commandes terminées. Une journée de service va de 6 h à 6 h (heure du Maroc).</p>
+      </div>
+    </main>
+  </section>
+
+  <!-- A new order: fills the screen and rings until it is accepted or refused -->
+  <div class="alert" id="alert" hidden role="alertdialog" aria-modal="true" aria-labelledby="alert-title">
+    <div class="alert__card">
+      <p class="alert__kicker">Nouvelle commande</p>
+      <h2 id="alert-title"></h2>
+      <div id="alert-body"></div>
+      <div id="alert-accept">
+        <p class="alert__q">Prête dans combien de temps ?</p>
+        <div class="eta" id="eta-btns"></div>
+        <button class="btn btn--line btn--block" type="button" id="refuse-open">Refuser</button>
+      </div>
+      <div id="alert-refuse" hidden>
+        <p class="alert__q">Pourquoi refuser ?</p>
+        <div class="reasons" id="reasons"></div>
+        <input class="reason-input" id="reason-other" maxlength="120" placeholder="Autre motif (vu par le client)">
+        <div class="row">
+          <button class="btn btn--line" type="button" id="refuse-back">Retour</button>
+          <button class="btn btn--red" type="button" id="refuse-go">Refuser la commande</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="/js/config.js?v=1"></script>
+  <script src="/js/orders.js?v=1"></script>
+  <script src="/commandes/commandes.js?v=1"></script>
+</body>
+</html>

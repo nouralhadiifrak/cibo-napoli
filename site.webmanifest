@@ -1,0 +1,21 @@
+{
+  "name": "Cibo Napoli",
+  "short_name": "Cibo Napoli",
+  "description": "Pizzas napolitaines, pâtes fraîches et desserts à El Mansouria. Commande en ligne.",
+  "id": "/",
+  "start_url": "/?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#1e5c34",
+  "theme_color": "#1e5c34",
+  "lang": "fr",
+  "categories": ["food", "shopping"],
+  "icons": [
+    { "src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/assets/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Commander", "url": "/?source=app#menu", "icons": [{ "src": "/assets/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

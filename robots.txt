@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /commandes/
+Disallow: /avis/
+
+Sitemap: https://cibo-napoli.vercel.app/sitemap.xml

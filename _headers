@@ -1,0 +1,33 @@
+# Cloudflare Pages headers (the same rules are in vercel.json for the demo on Vercel).
+# Every page: no framing by other sites, no guessing of file types, no full address sent to other sites, only
+# the location (the delivery map's « Utiliser ma position ») among the phone's sensors, and HTTPS only.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Content-Security-Policy: frame-ancestors 'self'
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), payment=(), usb=(), interest-cohort=(), geolocation=(self)
+  Strict-Transport-Security: max-age=31536000
+
+# Pages, styles, scripts, service workers and manifests are checked on every visit (the ?v= numbers change after
+# each code change); pictures, fonts and libraries are kept 7 days.
+/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+/commandes/sw.js
+  Cache-Control: public, max-age=0, must-revalidate
+/site.webmanifest
+  Content-Type: application/manifest+json
+  Cache-Control: public, max-age=0, must-revalidate
+/commandes/staff.webmanifest
+  Content-Type: application/manifest+json
+/css/*
+  Cache-Control: public, max-age=0, must-revalidate
+/js/*
+  Cache-Control: public, max-age=0, must-revalidate
+/commandes/*
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Robots-Tag: noindex
+/assets/*
+  Cache-Control: public, max-age=604800
+/vendor/*
+  Cache-Control: public, max-age=604800

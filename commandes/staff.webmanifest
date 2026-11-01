@@ -1,0 +1,17 @@
+{
+  "name": "Cibo Napoli · Commandes",
+  "short_name": "CN Commandes",
+  "id": "/commandes/",
+  "start_url": "/commandes/",
+  "scope": "/commandes/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1c1c1e",
+  "theme_color": "#1c1c1e",
+  "lang": "fr",
+  "icons": [
+    { "src": "/assets/icons/staff-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icons/staff-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/assets/icons/staff-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
