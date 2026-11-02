@@ -944,3 +944,7 @@ body[data-page="book"] {
 .book.lux .book__done-icon { background: var(--lux-gold); color: #1a1408; }
 .book.lux .book__done h2 { color: var(--lux-text); }
 .book.lux .tracker__grazie { color: var(--lux-gold); }
+/* the ☰ panel in the site's colours */
+.navpanel__links a[aria-current="page"] { box-shadow: inset 4px 0 0 #ff8a1d; }
+.navpanel__tools .install-btn--panel { background: #ff8a1d; color: #1a1408; }
+.navpanel__tools .lang a[aria-current="true"] { background: #ff8a1d; color: #1a1408; }

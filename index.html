@@ -11,7 +11,6 @@
   <link rel="alternate" hreflang="x-default" href="https://cibo-napoli.vercel.app/">
   <meta name="theme-color" content="#1e5c34">
   <!-- dark mode before the first paint: the saved choice, or the phone's setting the first time -->
-  <script>try{var cnT=localStorage.getItem("cibo.theme");cnT=cnT?JSON.parse(cnT):(window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",cnT)}catch(e){}</script>
 
   <meta property="og:type" content="restaurant">
   <meta property="og:site_name" content="Cibo Napoli">
@@ -594,7 +593,7 @@
        Once per visit; a tap skips it. Falls back to the logo on green if the video can't play. -->
   <div class="intro" id="intro" aria-hidden="true">
     <video class="intro__video" muted playsinline preload="auto" disablepictureinpicture disableremoteplayback></video>
-    <script>(function(v){try{var q=new URLSearchParams(location.search);if(!v||!v.canPlayType||q.get("intro")==="0"||q.get("introvideo")==="0"||sessionStorage.getItem("cibo.intro")==="1"||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches))return;var m=v.canPlayType('video/mp4; codecs="avc1.4D401F"'),w=v.canPlayType('video/webm; codecs="vp9"');if(!m&&!w)return;var k=innerWidth>=innerHeight?"landscape":"portrait";v.dataset.kind=k;v.poster="/assets/intro/intro-poster-"+k+".jpg";v.src="/assets/intro/intro-"+k+"."+(m?"mp4":"webm")}catch(e){}})(document.currentScript.previousElementSibling)</script>
+    <script>(function(v){try{var q=new URLSearchParams(location.search);if(!v||!v.canPlayType||q.get("intro")==="0"||q.get("introvideo")==="0")return;var r=document.referrer&&new URL(document.referrer);if(r&&r.origin===location.origin&&r.pathname!==location.pathname)return;var n=performance.getEntriesByType&&performance.getEntriesByType("navigation")[0];if(n&&n.type==="back_forward")return;var m=v.canPlayType('video/mp4; codecs="avc1.4D401F"'),w=v.canPlayType('video/webm; codecs="vp9"');if(!m&&!w)return;var k=innerWidth>=innerHeight?"landscape":"portrait";v.dataset.kind=k;v.poster="/assets/intro/intro-poster-"+k+".jpg";v.src="/assets/intro/intro-"+k+"."+(m?"mp4":"webm")}catch(e){}})(document.currentScript.previousElementSibling)</script>
     <div class="intro__center">
       <img class="intro__logo" src="/assets/brand/logo-white.webp" alt="" width="640" height="182">
       <p class="intro__tag">La Buona Cucina Napolitana</p>
@@ -617,8 +616,6 @@
         <a href="/#infos" data-keep-lang data-i18n="nav.info">Infos</a>
       </nav>
       <div class="topbar__actions">
-        <button class="install-btn" type="button" data-install hidden><img src="/assets/icons/icon-192.png" alt="" width="26" height="26"><span data-i18n="nav.install">Installer</span></button>
-        <button class="icon-btn theme-btn" type="button" data-theme-toggle aria-pressed="false" data-i18n-aria="nav.dark"><svg class="theme-btn__moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><svg class="theme-btn__sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
         <div class="lang" role="group" data-i18n-aria="nav.lang">
           <a data-lang-link="fr" href="?">FR</a>
           <a data-lang-link="en" href="?lang=en">EN</a>
@@ -640,8 +637,6 @@
         <a href="/" data-keep-lang data-i18n="nav.home">Accueil</a>
         <a href="/commander/" data-keep-lang data-i18n="nav.order">La Carte</a>
         <a href="/reserver/" data-keep-lang data-i18n="nav.book">Réserver</a>
-        <a href="/#histoire" data-keep-lang data-i18n="nav.story">Notre histoire</a>
-        <a href="/#avis" data-keep-lang data-i18n="nav.reviews">Avis</a>
         <a href="/#infos" data-keep-lang data-i18n="nav.info">Infos</a>
       </div>
       <div class="navpanel__tools">
@@ -649,7 +644,6 @@
           <a data-lang-link="fr" href="?">Français</a>
           <a data-lang-link="en" href="?lang=en">English</a>
         </div>
-        <button class="btn btn--line btn--block theme-btn theme-btn--text" type="button" data-theme-toggle aria-pressed="false"><svg class="theme-btn__moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><svg class="theme-btn__sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="theme-btn__text" data-i18n="nav.dark">Mode sombre</span></button>
         <button class="btn btn--red btn--block install-btn install-btn--panel" type="button" data-install hidden><img src="/assets/icons/icon-192.png" alt="" width="26" height="26"><span data-i18n="nav.install">Installer</span></button>
       </div>
     </nav>
