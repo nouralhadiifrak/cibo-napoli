@@ -82,8 +82,8 @@ async function run() {
       const tag = `${lang}-${width}`;
       const q = lang === "en" ? "?lang=en" : "?";
       const T = lang === "en"
-        ? { title: "The taste of Italy on your plate", order: "Order", pasta: "Which pasta?", added: "added", accepted: "Accepted", done: "Buon appetito!", cancelled: "Order cancelled", outZone: "outside our delivery area", closed: "Closed", review: "Write a Google review", buttons: ["Order now", "Book a table", "Directions"], sig: "Signature collection", xp: "Unforgettable experiences", sent: "Request sent!", dark: "Light mode" }
-        : { title: "Le goût de l'Italie dans votre assiette", order: "Commander", pasta: "Quelle pâte ?", added: "ajouté", accepted: "Acceptée", done: "Bon appétit !", cancelled: "Commande annulée", outZone: "hors de notre zone", closed: "Fermé", review: "Laisser un avis Google", buttons: ["Commander", "Réserver une table", "Itinéraire"], sig: "La collection signature", xp: "Des moments inoubliables", sent: "Demande envoyée !", dark: "Mode clair" };
+        ? { title: "The taste of Italy on your plate", order: "Order", pasta: "Which pasta?", added: "added", accepted: "Accepted", done: "Buon appetito!", cancelled: "Order cancelled", outZone: "outside our delivery area", closed: "Closed", review: "Write a Google review", buttons: ["Menu", "Book a table", "Directions"], sig: "Signature collection", xp: "Unforgettable experiences", sent: "Request sent!", dark: "Light mode" }
+        : { title: "Le goût de l'Italie dans votre assiette", order: "Commander", pasta: "Quelle pâte ?", added: "ajouté", accepted: "Acceptée", done: "Bon appétit !", cancelled: "Commande annulée", outZone: "hors de notre zone", closed: "Fermé", review: "Laisser un avis Google", buttons: ["La Carte", "Réserver une table", "Itinéraire"], sig: "La collection signature", xp: "Des moments inoubliables", sent: "Demande envoyée !", dark: "Mode clair" };
       const amp = q === "?" ? "" : "&";
 
       section(`[${tag}] intro`);
@@ -137,13 +137,20 @@ async function run() {
         check(btns[0].href.startsWith("/commander/") && btns[1].href.startsWith("/reserver/") && /maps/.test(btns[2].href), "they open the order page, the booking page and Google Maps");
         check(await h.$eval(".hero__pizza", (e) => e.tagName === "IMG" && /pizza/.test(e.src) && getComputedStyle(e).animationName === "spin"), "a real pizza photo that turns");
         check(!(await h.$("#menu")), "no menu on the home page");
-        check(await h.$eval(".hero", (e) => getComputedStyle(e).backgroundColor === "rgb(13, 14, 13)"), "a dark hero, like the reference");
+        check(await h.evaluate(() => getComputedStyle(document.body).backgroundColor === "rgb(16, 14, 11)") && await h.$(".hero .aura"), "a dark page with the aura glows behind the hero");
         check(await h.$eval(".hero__pizza", (e) => /pizza-plate/.test(e.currentSrc || e.src)) && await h.$(".hero__glow"), "the pizza on its plate, with the warm light under it");
         check(await h.$$eval("main > section", (s) => s.map((x) => x.id || x.classList[0]).join(",")) === "hero,signature,histoire,avis,infos", "hero, signature collection, our story, experiences, info, in that order");
         check((await h.textContent("#sig-title")).replace(/\s+/g, " ").trim() === T.sig, "signature collection title");
-        check(await h.$$eval(".sig__card", (c) => c.length) === 4 && await h.$$eval(".sig__price", (p) => p.every((x) => /\d+ DH/.test(x.textContent))), "4 signature dishes with their menu price");
-        check(await h.$$eval(".sig__media.is-soon", (m) => m.length) === 4, "photo placeholders until the photos arrive");
-        await h.click('[data-sig-add="pizza-cibo-napoli"]');
+        check(await h.$$eval(".sig__card:not(.sig__card--clone)", (c) => c.length) === 4 && await h.$$eval(".sig__price", (p) => p.every((x) => /\d+ DH/.test(x.textContent))), "4 signature dishes with their menu price");
+        check(await h.$$eval(".sig__card:not(.sig__card--clone) .sig__media.is-soon", (m) => m.length) === 4, "photo placeholders until the photos arrive");
+        if (width === 390) {
+          check(await h.$eval(".sig__list", (l) => getComputedStyle(l).animationName === "sig-drift" && getComputedStyle(l).display === "flex"), "phones: the signature dishes side by side, drifting to the left");
+          const tops = await h.$$eval(".sig__card", (c) => c.slice(0, 2).map((x) => Math.round(x.getBoundingClientRect().top)));
+          check(tops[0] === tops[1], "…on one row");
+        }
+        check(await h.isVisible(".topbar .lang"), "the language choice next to the cart");
+        await h.$eval('[data-sig-add="pizza-cibo-napoli"]', (b) => b.click());
+        check(await h.$$eval(".burst span", (s) => s.length > 0 && s.some((x) => x.textContent === "🍕")), "flying pizza emojis from the button");
         check(await h.evaluate(() => JSON.parse(localStorage.getItem("cibo.cart.v1")).some((l) => l.id === "pizza-cibo-napoli" && l.qty === 1)) && (await h.textContent(".topbar .js-cart-count")).trim() === "1", "the cart button puts the dish in the cart");
         check(await h.$$eval(".story__photos .ph.is-soon", (p) => p.map((x) => x.dataset.photo).join(",")) === "team,plate,outside", "our story: 3 photo placeholders (team, plate, outside)");
         check(await h.$$eval("#story-stats li", (l) => l.length) === 3, "our story: 3 real numbers");

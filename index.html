@@ -610,7 +610,7 @@
       </a>
       <nav class="topnav" aria-label="Menu">
         <a href="/" data-keep-lang data-i18n="nav.home">Accueil</a>
-        <a href="/commander/" data-keep-lang data-i18n="nav.order">Commander</a>
+        <a href="/commander/" data-keep-lang data-i18n="nav.order">La Carte</a>
         <a href="/reserver/" data-keep-lang data-i18n="nav.book">Réserver</a>
         <a href="/#histoire" data-keep-lang data-i18n="nav.story">Notre histoire</a>
         <a href="/#avis" data-keep-lang data-i18n="nav.reviews">Avis</a>
@@ -638,7 +638,7 @@
       </div>
       <div class="navpanel__links">
         <a href="/" data-keep-lang data-i18n="nav.home">Accueil</a>
-        <a href="/commander/" data-keep-lang data-i18n="nav.order">Commander</a>
+        <a href="/commander/" data-keep-lang data-i18n="nav.order">La Carte</a>
         <a href="/reserver/" data-keep-lang data-i18n="nav.book">Réserver</a>
         <a href="/#histoire" data-keep-lang data-i18n="nav.story">Notre histoire</a>
         <a href="/#avis" data-keep-lang data-i18n="nav.reviews">Avis</a>
@@ -658,6 +658,7 @@
   <main id="top">
     <!-- Hero: dark like a fine-dining page, the pizza on its plate with a warm light under it -->
     <section class="hero lux">
+      <div class="aura aura--a" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       <div class="hero__in">
         <div class="hero__text">
           <p class="lux-eyebrow" data-i18n="hero.eyebrow">Pizzeria napolitaine · El Mansouria</p>
@@ -665,7 +666,7 @@
           <div class="lux-rule" aria-hidden="true"><svg viewBox="0 0 40 14"><path d="M2 7c8-6 16-6 24 0M26 7c-4-4-2-6 3-6M26 7c-3 3-1 5 4 5M34 7h4" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
           <p class="hero__lead" data-i18n="hero.lead">Des ingrédients venus d'Italie, choisis avec soin, pour une vraie cuisine napolitaine.</p>
           <div class="hero__cta">
-            <a class="btn btn--gold" href="/commander/" data-keep-lang><span data-i18n="hero.order">Commander</span><svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            <a class="btn btn--gold" href="/commander/" data-keep-lang><span data-i18n="hero.order">La Carte</span><svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
             <a class="btn btn--outline" href="/reserver/" data-keep-lang><span data-i18n="hero.reserve">Réserver une table</span><svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 10h16M9 3.5v4M15 3.5v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></a>
             <a class="btn btn--text hero__wide" data-maps href="#" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>
@@ -681,19 +682,21 @@
 
     <!-- Signature collection: 4 dishes from the menu (js/config.js → signature), photos when they arrive -->
     <section class="sig lux" id="signature" aria-labelledby="sig-title">
+      <div class="aura aura--b" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       <div class="wrap">
         <header class="lux-head">
           <p class="lux-eyebrow lux-eyebrow--center" data-i18n="sig.eyebrow">Sélection de la maison</p>
           <h2 class="lux-title" id="sig-title"><span data-i18n="sig.t1">La collection</span> <em data-i18n="sig.t2">signature</em></h2>
           <p class="lux-lead" data-i18n="sig.lead"></p>
         </header>
-        <div class="sig__list" id="sig-list"></div>
+        <div class="sig__viewport"><div class="sig__list" id="sig-list"></div></div>
         <p class="center"><a class="btn btn--outline" href="/commander/" data-keep-lang><span data-i18n="sig.all">Voir toute la carte</span><svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a></p>
       </div>
     </section>
 
     <!-- Our story: text, signature, real numbers from the menu, 3 photos (js/config.js → homePhotos) -->
     <section class="story lux" id="histoire" aria-labelledby="story-title">
+      <div class="aura aura--c" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       <div class="wrap story__in">
         <div class="story__text">
           <p class="lux-eyebrow" data-i18n="story.eyebrow">Notre histoire</p>
@@ -714,6 +717,7 @@
 
     <!-- Unforgettable experiences: the real Google reviews (js/reviews.js) -->
     <section class="reviews lux" id="avis" aria-labelledby="reviews-title">
+      <div class="aura aura--d" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       <div class="wrap">
         <div class="xp__head">
           <div>
@@ -737,6 +741,7 @@
     </section>
 
     <section class="info lux" id="infos" aria-labelledby="info-title">
+      <div class="aura aura--e" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       <div class="wrap info__in">
         <div class="info__text">
           <h2 class="section-title" id="info-title" data-i18n="info.title">Venir nous voir</h2>
@@ -764,7 +769,7 @@
     <div class="wrap footer__in">
       <img class="footer__logo" src="/assets/brand/logo-white.webp" alt="Cibo Napoli" width="640" height="182" loading="lazy">
       <nav class="footer__links">
-        <a href="/commander/" data-keep-lang data-i18n="nav.order">Commander</a>
+        <a href="/commander/" data-keep-lang data-i18n="nav.order">La Carte</a>
         <a href="/reserver/" data-keep-lang data-i18n="nav.book">Réserver</a>
         <a href="/confidentialite/" data-keep-lang data-i18n="footer.privacy">Confidentialité</a>
         <a href="/conditions/" data-keep-lang data-i18n="footer.terms">Conditions de vente</a>

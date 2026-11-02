@@ -8,7 +8,7 @@
  *  - « Des moments inoubliables »: the reviews slide sideways on phones, with arrows and dots.
  */
 (function () {
-  const { C, $, $$, esc, store, t, L, money, toast } = window.CN;
+  const { C, $, $$, esc, store, t, L, money, toast, roll, burst, emojiFor, reduceMotion } = window.CN;
   const MENU = window.MENU || [];
   const find = (id) => {
     for (const cat of MENU) { const item = cat.items.find((i) => i.id === id); if (item) return { item, cat }; }
@@ -50,10 +50,27 @@
       if (line) line.qty += 1; else cart.push({ key: hit.item.id, id: hit.item.id, choice: null, qty: 1 });
       store.set(CART_KEY, cart);
       const n = cart.reduce((s, l) => s + (l.qty || 0), 0);
-      $$(".js-cart-count").forEach((el) => { el.textContent = n; el.hidden = !n; el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); });
+      $$(".js-cart-count").forEach((el) => { roll(el, n); el.hidden = !n; el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); });
       b.classList.remove("is-added"); void b.offsetWidth; b.classList.add("is-added");
+      burst(b, emojiFor(hit.item, hit.cat));
       toast(t("menu.added", { name: L(hit.item.name) }));
     });
+    // phones: the cards sit side by side and drift slowly to the left, without end (a second copy follows the
+    // first; it is hidden from screen readers and on computers). A finger on them pauses the drift.
+    if (picks.length > 1) {
+      $$(".sig__card", list).forEach((c) => {
+        const k = c.cloneNode(true);
+        k.classList.add("sig__card--clone");
+        k.setAttribute("aria-hidden", "true");
+        k.querySelectorAll("button").forEach((b) => b.setAttribute("tabindex", "-1"));
+        list.appendChild(k);
+      });
+      const pause = (on) => list.classList.toggle("is-paused", on);
+      list.addEventListener("touchstart", () => pause(true), { passive: true });
+      list.addEventListener("touchend", () => setTimeout(() => pause(false), 1200), { passive: true });
+      list.addEventListener("focusin", () => pause(true));
+      list.addEventListener("focusout", () => pause(false));
+    }
   }
 
   /* ---------- Our story ---------- */
@@ -66,7 +83,19 @@
         [pizze ? pizze.items.length : 0, t("story.stat.pizzas")],
         [recipes, t("story.stat.dishes")],
         ["7/7", t("story.stat.days")],
-      ].filter((s) => s[0]).map(([n, label]) => `<li><strong>${esc(n)}</strong><span>${esc(label)}</span></li>`).join("");
+      ].filter((s) => s[0]).map(([n, label]) => `<li><strong data-count="${esc(n)}">${esc(n)}</strong><span>${esc(label)}</span></li>`).join("");
+      // the numbers roll up from zero when they come into view
+      const nums = $$("[data-count]", stats);
+      const zero = (v) => String(v).replace(/\d/g, "0");
+      if ("IntersectionObserver" in window && !reduceMotion()) {
+        nums.forEach((el) => roll(el, zero(el.dataset.count)));
+        const io = new IntersectionObserver((entries) => {
+          if (!entries.some((e) => e.isIntersecting)) return;
+          nums.forEach((el) => roll(el, el.dataset.count));
+          io.disconnect();
+        }, { threshold: 0.6 });
+        io.observe(stats);
+      } else nums.forEach((el) => roll(el, el.dataset.count));
     }
     const P = C.homePhotos || {};
     $$("[data-photo]").forEach((fig) => {

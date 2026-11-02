@@ -135,6 +135,8 @@
     saveCart();
     CN.toast(t("menu.added", { name: L(ITEMS.get(id).item.name) }));
     bump(fromEl);
+    const hit = ITEMS.get(id);
+    CN.burst(fromEl, CN.emojiFor(hit.item, hit.cat));
   }
   function addFromMenu(id, btn) {
     const { item, cat } = ITEMS.get(id);
@@ -199,14 +201,15 @@
     return /^0[5-7]\d{8}$/.test(d) ? d : null;
   };
 
+  const shownLines = new Map(); // the amounts last shown per cart line, so they roll from there
   function renderCart() {
     const n = cartCount();
-    $$(".js-cart-count").forEach((el) => { el.textContent = n; el.hidden = !n; });
+    $$(".js-cart-count").forEach((el) => { CN.roll(el, n); el.hidden = !n; });
     const bar = $("#cart-bar");
     bar.hidden = !n;
     document.body.classList.toggle("has-cart-bar", !!n);
     bar.querySelector(".cart-bar__count").textContent = n === 1 ? t("cart.item") : t("cart.items", { n });
-    bar.querySelector(".cart-bar__total").textContent = money(subtotal());
+    CN.roll(bar.querySelector(".cart-bar__total"), money(subtotal()));
     const drawer = $("#cart");
     drawer.classList.toggle("is-empty", !n);
     $("#cart-lines").innerHTML = cart.map((l) => {
@@ -224,6 +227,14 @@
         <span class="line__total">${money(l.qty * item.price)}</span>
       </li>`;
     }).join("");
+    $$("#cart-lines .line").forEach((li) => {
+      const l = cart.find((x) => x.key === li.dataset.key);
+      const was = shownLines.get(l.key);
+      const total = money(l.qty * ITEMS.get(l.id).item.price);
+      CN.roll(li.querySelector(".line__total"), total, was ? was.total : total);
+      CN.roll(li.querySelector(".stepper__n"), l.qty, was ? was.qty : l.qty);
+      shownLines.set(l.key, { total, qty: l.qty });
+    });
     $$('input[name="mode"]').forEach((r) => { r.checked = r.value === state.mode; });
     $("#delivery-box").hidden = state.mode !== "delivery";
     $("#pickup-hint").hidden = state.mode !== "pickup";
@@ -235,10 +246,10 @@
       if (!drawer.hidden) ensureDeliveryMap();
     }
     $("#pay-note").textContent = t(state.mode === "delivery" ? "cart.pay.delivery" : "cart.pay.pickup");
-    $("#sum-sub").textContent = money(subtotal());
+    CN.roll($("#sum-sub"), money(subtotal()));
     $("#sum-fee-row").hidden = state.mode !== "delivery";
     $("#sum-fee").textContent = state.mode === "delivery" ? (inZone() ? money(C.delivery.fee) : "—") : money(0);
-    $("#sum-total").textContent = money(subtotal() + deliveryFee());
+    CN.roll($("#sum-total"), money(subtotal() + deliveryFee()));
     const go = $("#order-btn");
     const open = CN.isOpen();
     go.disabled = state.sending || !n || !open;

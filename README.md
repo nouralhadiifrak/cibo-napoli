@@ -19,10 +19,16 @@ Three pages: **home** `/`, **order** `/commander/`, **book a table** `/reserver/
   The film's address is set by a tiny script right under the `<video>` tag so phones start loading it at once; the
   poster shows while it loads, and the classic intro takes over if it hasn't started after 4 s. The service worker
   leaves videos alone (phones fetch them in pieces, which the cache can't store)
+- Look of the home and menu pages: forest green with a touch of mandarin on #100e0b, with « aura » glows (`.aura`,
+  4 blurred layers blended with `screen`). Every button has a ring of colours that keeps turning (only while on
+  screen). Adding a dish sends flying emojis of that dish from the button (`CN.burst`); prices, quantities and the
+  cart count roll digit by digit (`CN.roll`), and the story numbers roll up from zero. The language choice sits
+  next to the cart, on phones too
 - Home, dark like a fine-dining page (`.lux` in `css/style.css`, `js/home.js`): « Le goût de l'Italie dans votre
-  assiette », buttons Commander / Réserver une table and Itinéraire under them, 3 facts (hours, delivery, produce
+  assiette », buttons La Carte / Réserver une table and Itinéraire under them, 3 facts (hours, delivery, produce
   from Italy), the pizza on its white plate turning slowly with a warm light under it (`heroMedia`). Then « La
-  collection signature » (4 dishes from the menu, `signature` in `js/config.js`, the cart button adds the dish),
+  collection signature » (4 dishes from the menu, `signature` in `js/config.js`, the cart button adds the dish; on
+  phones they sit side by side and drift slowly to the left, a finger pauses them),
   « Notre histoire » (text, the Cibo Napoli signature, numbers counted from the menu, 3 photos: the owner and the
   team, a plate, the restaurant: `homePhotos` in `js/config.js`, placeholders until then), « Des moments
   inoubliables » (the Google reviews, sliding sideways on phones) and the info with the map

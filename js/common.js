@@ -426,19 +426,101 @@
     window.addEventListener("offline", () => toast(t("toast.offline")));
   }
 
+  /* ---------- Rolling numbers (each digit rolls to its new value, like an odometer) ----------
+   * roll(el, "135 DH") · roll(el, value, from) to roll from a given old value (an element drawn again).
+   * The real text stays in the element (screen readers, copy); the rolling strip is drawn by CSS (.roll__d::after). */
+  const reduceMotion = () => !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  function roll(el, value, from) {
+    if (!el) return;
+    value = String(value);
+    const prev = from != null ? String(from) : el.dataset.roll;
+    if (from == null && prev === value && el.querySelector(".roll__d")) return;
+    el.dataset.roll = value;
+    el.classList.add("roll");
+    const chars = Array.from(value);
+    const old = prev != null ? Array.from(prev) : null;
+    const animate = !!old && prev !== value && !reduceMotion();
+    const oldDigit = (fromRight) => { const c = old && old[old.length - 1 - fromRight]; return c && /\d/.test(c) ? c : "0"; };
+    el.innerHTML = chars.map((c, i) => {
+      if (!/\d/.test(c)) return esc(c);
+      const start = animate ? oldDigit(chars.length - 1 - i) : c;
+      return `<span class="roll__d" style="--d:${start};--delay:${animate ? i * 55 : 0}ms" data-to="${c}"><i>${c}</i></span>`;
+    }).join("");
+    if (animate) {
+      void el.offsetWidth;
+      el.querySelectorAll(".roll__d").forEach((d) => d.style.setProperty("--d", d.dataset.to));
+    }
+  }
+
+  /* ---------- Flying emojis from a button (after « add to cart ») ---------- */
+  const EMOJI_ART = { pizza: "🍕", pasta: "🍝", ravioli: "🥟", lasagna: "🍝", plate: "🍗", dessert: "🍰", drink: "🥤" };
+  const EMOJI_WORDS = [
+    [/gamber|gambas/, "🦐"], [/tonno/, "🐟"], [/fungh|champignon|truff/, "🍄"], [/pollo|poulet|milanese/, "🍗"],
+    [/diavola|arrabiata|chorizo|peperoni|fuoco/, "🌶️"], [/pesto|verdura/, "🌿"], [/formaggi|stracciatella|alfredo/, "🧀"],
+    [/carne|bolognaise|maradona/, "🥩"], [/margarita|marinara|napolitaine|nonna/, "🍅"], [/tiramisu/, "☕"],
+    [/panna|creme-brulee/, "🍮"], [/cheesecake/, "🍰"], [/mangue/, "🥭"], [/fruits-rouges/, "🍓"],
+  ];
+  function emojiFor(item, cat) {
+    const main = (item && item.emoji) || EMOJI_ART[cat && cat.art] || "🍽️";
+    const hit = item && EMOJI_WORDS.find(([re]) => re.test(item.id));
+    return hit && hit[1] !== main ? [main, main, hit[1]] : [main];
+  }
+  function burst(fromEl, emojis) {
+    if (!fromEl || !emojis || !emojis.length || reduceMotion() || !document.body.animate) return;
+    const r = fromEl.getBoundingClientRect();
+    if (!r.width) return;
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const layer = document.createElement("div");
+    layer.className = "burst";
+    layer.setAttribute("aria-hidden", "true");
+    document.body.appendChild(layer);
+    const n = 10;
+    for (let i = 0; i < n; i++) {
+      const e = document.createElement("span");
+      e.textContent = emojis[i % emojis.length];
+      e.style.left = `${cx}px`;
+      e.style.top = `${cy}px`;
+      e.style.fontSize = `${20 + Math.random() * 14}px`;
+      layer.appendChild(e);
+      const dx = (Math.random() - 0.5) * 200, dy = -110 - Math.random() * 130, rot = (Math.random() - 0.5) * 120;
+      e.animate([
+        { transform: "translate(-50%, -50%) scale(.2)", opacity: 0 },
+        { transform: `translate(-50%, -50%) translate(${dx * 0.35}px, ${dy * 0.45}px) scale(1.15)`, opacity: 1, offset: 0.25 },
+        { transform: `translate(-50%, -50%) translate(${dx}px, ${dy}px) rotate(${rot}deg) scale(.85)`, opacity: 0 },
+      ], { duration: 900 + Math.random() * 500, delay: i * 28, easing: "cubic-bezier(.2, .7, .3, 1)", fill: "both" });
+    }
+    setTimeout(() => layer.remove(), 1900);
+  }
+
   window.CN = {
     C, SITE, LANG, $, $$, esc, store, t, L, LFR, withLang, money, nf, casaParts, toMin, isOpen, hourLabel, clock,
     openLayer, closeLayer, toast, loadLeaflet, baseMap, pinIcon, distanceKm, inZone, startTracking, showTracker, waLink, shortNum,
-    installNudge,
+    installNudge, roll, burst, emojiFor, reduceMotion,
   };
+
+  /* ---------- Turning rings on the buttons: only those on screen turn (saves the phone's battery) ---------- */
+  function ringsOnScreen() {
+    if (!("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver((entries) => entries.forEach((e) => e.target.classList.toggle("ring-off", !e.isIntersecting)));
+    const seen = new WeakSet();
+    const scan = () => document.querySelectorAll(".btn:not(.btn--text), .dish__add, .sig__add").forEach((b) => {
+      if (seen.has(b)) return;
+      seen.add(b);
+      b.classList.add("ring-off");
+      io.observe(b);
+    });
+    scan();
+    new MutationObserver(() => { clearTimeout(ringsOnScreen.t); ringsOnScreen.t = setTimeout(scan, 100); }).observe(document.body, { childList: true, subtree: true });
+  }
 
   /* ---------- Start ---------- */
   applyText();
   // the cart count in the header on every page (the order page keeps it up to date itself)
   const inCart = (store.get("cibo.cart.v1") || []).reduce((n, l) => n + (l.qty || 0), 0);
-  $$(".js-cart-count").forEach((el) => { el.textContent = inCart; el.hidden = !inCart; });
+  $$(".js-cart-count").forEach((el) => { roll(el, inCart); el.hidden = !inCart; });
   setupHeader();
   setupTheme();
+  ringsOnScreen();
   renderHero();
   renderReviews();
   renderInfo();
