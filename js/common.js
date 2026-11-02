@@ -139,28 +139,6 @@
   }
 
   /* ---------- Dark mode (the choice is kept on this phone; the first time it follows the phone) ---------- */
-  const THEME_KEY = "cibo.theme";
-  function setupTheme() {
-    const html = document.documentElement;
-    const label = () => {
-      const dark = html.dataset.theme === "dark";
-      $$("[data-theme-toggle]").forEach((b) => {
-        b.setAttribute("aria-pressed", dark ? "true" : "false");
-        b.setAttribute("aria-label", t(dark ? "nav.light" : "nav.dark"));
-        const txt = b.querySelector(".theme-btn__text");
-        if (txt) txt.textContent = t(dark ? "nav.light" : "nav.dark");
-      });
-      const meta = $('meta[name="theme-color"]');
-      if (meta) meta.setAttribute("content", dark ? "#0f1a12" : "#1e5c34");
-    };
-    $$("[data-theme-toggle]").forEach((b) => b.addEventListener("click", () => {
-      html.dataset.theme = html.dataset.theme === "dark" ? "light" : "dark";
-      store.set(THEME_KEY, html.dataset.theme);
-      label();
-    }));
-    label();
-  }
-
   /* ---------- Status (open / closed) ---------- */
   function updateStatus() {
     const open = isOpen();
@@ -389,7 +367,9 @@
   const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const LATER_KEY = "cibo.install.later";
   const canInstall = () => !standalone() && (installEvt || isIOS());
-  function refreshInstall() { $$("[data-install]").forEach((b) => { b.hidden = !canInstall(); }); }
+  // the ☰ panel always offers « Installer » (unless the app is already open as an app); the pop-up banner only
+  // when the phone can really install it
+  function refreshInstall() { $$("[data-install]").forEach((b) => { b.hidden = standalone(); }); }
   async function doInstall() {
     const banner = $("#install-banner");
     if (banner) banner.classList.remove("is-on");
@@ -400,6 +380,8 @@
       refreshInstall();
     } else if (isIOS() && $("#ios-steps")) {
       openLayer($("#ios-steps"));
+    } else {
+      toast(t("install.manual"));
     }
   }
   let nudged = false;
@@ -519,7 +501,6 @@
   const inCart = (store.get("cibo.cart.v1") || []).reduce((n, l) => n + (l.qty || 0), 0);
   $$(".js-cart-count").forEach((el) => { roll(el, inCart); el.hidden = !inCart; });
   setupHeader();
-  setupTheme();
   ringsOnScreen();
   renderHero();
   renderReviews();

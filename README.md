@@ -16,6 +16,9 @@ Three pages: **home** `/`, **order** `/commander/`, **book a table** `/reserver/
   closes, the camera dives onto the logo on green), tall on phones and wide on computers (`assets/intro/`, MP4 + WebM).
   On its last frame the real logo takes the place of the one in the film and glides into the header. If the film
   can't play (autoplay blocked, slow network), the classic intro runs: the logo on green, then the same glide.
+  It plays each time the home page is opened (not when coming back from another page of the site, nor with the back
+  button), also with « reduce motion » (Android battery savers turn it on); only a tap on it, « Passer », Esc or Enter
+  skips it (scrolling doesn't). If an old copy of the service worker blocks the film, it is asked for again once.
   The film's address is set by a tiny script right under the `<video>` tag so phones start loading it at once; the
   poster shows while it loads, and the classic intro takes over if it hasn't started after 4 s. The service worker
   leaves videos alone (phones fetch them in pieces, which the cache can't store)
@@ -23,7 +26,8 @@ Three pages: **home** `/`, **order** `/commander/`, **book a table** `/reserver/
   4 blurred layers blended with `screen`). Every button has a ring of colours that keeps turning (only while on
   screen). Adding a dish sends flying emojis of that dish from the button (`CN.burst`); prices, quantities and the
   cart count roll digit by digit (`CN.roll`), and the story numbers roll up from zero. The language choice sits
-  next to the cart, on phones too
+  next to the cart, on phones too. No dark-mode button any more; « Installer » is in the ☰ panel (home, menu,
+  booking, info)
 - Home, dark like a fine-dining page (`.lux` in `css/style.css`, `js/home.js`): « Le goût de l'Italie dans votre
   assiette », buttons La Carte / Réserver une table and Itinéraire under them, 3 facts (hours, delivery, produce
   from Italy), the pizza on its white plate turning slowly with a warm light under it (`heroMedia`). Then « La

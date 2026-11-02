@@ -98,7 +98,7 @@ async function run() {
         check(kind === (width >= 844 ? "landscape" : "portrait"), `the ${width >= 844 ? "wide" : "tall"} film is used`);
         await page.waitForFunction(() => { const i = document.querySelector(".intro"); return !i || i.classList.contains("is-handoff"); }, null, { timeout: 6000 }).catch(() => {});
         if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `${tag}-intro-handoff.png`) });
-        check(await page.$eval(".intro", (e) => e.classList.contains("is-handoff")), "the real logo takes over at the end of the film");
+        check(await page.evaluate(() => { const i = document.querySelector(".intro"); return !i ? "gone" : i.classList.contains("is-handoff"); }), "the real logo takes over at the end of the film");
         await page.clock.runFor(800);
         await page.waitForTimeout(150);
         await page.clock.runFor(400);
@@ -122,6 +122,16 @@ async function run() {
         await p2.waitForTimeout(500);
         check(!(await p2.$(".intro")), "a tap skips the intro");
         await ctx2.close();
+        const ctx4 = await newContext(browser, { width });
+        const p4 = await open(ctx4, `${BASE}/${q}`);
+        await p4.mouse.wheel(0, 300);
+        await p4.waitForTimeout(300);
+        check(!!(await p4.$(".intro")), "scrolling does not skip it");
+        await p4.goto(`${BASE}/reserver/${q}`);
+        await p4.click('.topnav a[href="/"], .brand').catch(() => {});
+        await p4.waitForLoadState("load");
+        check(!(await p4.$(".intro")), "no intro when coming back from another page of the site");
+        await ctx4.close();
       }
 
       section(`[${tag}] home page, header, dark mode`);
@@ -171,21 +181,15 @@ async function run() {
           check(await h.isVisible(".burger") && !(await h.isVisible(".topnav")), "phones: ☰ button instead of the links");
           await h.click(".burger");
           await h.waitForSelector("#nav-panel.is-open");
-          check(await h.$$eval("#nav-panel .navpanel__links a", (a) => a.length) === 6, "the ☰ menu holds all the titles");
+          check(await h.$$eval("#nav-panel .navpanel__links a", (a) => a.map((x) => x.pathname + x.hash).join(" ")) === "/ /commander/ /reserver/ /#infos", "the ☰ menu: home, menu, booking, info (no story, no reviews)");
+          check(await h.isVisible("#nav-panel [data-install]"), "the ☰ menu holds the « Installer » button");
           await shot(h, `${tag}-nav`);
-          await h.click("#nav-panel [data-theme-toggle]");
         } else {
           check(!(await h.isVisible(".burger")) && await h.isVisible(".topnav"), "PC: the titles in the header");
           const nav = await h.$eval(".topnav", (n) => { const r = n.getBoundingClientRect(); return Math.abs(r.left + r.width / 2 - innerWidth / 2); });
           check(nav < 4, "PC: the titles in the middle of the header");
-          await h.click(".topbar [data-theme-toggle]");
         }
-        check(await h.getAttribute("html", "data-theme") === "dark", "the dark mode button turns the site dark");
-        check(await h.evaluate(() => getComputedStyle(document.body).backgroundColor) !== "rgb(251, 246, 236)", "dark background");
-        await h.reload();
-        check(await h.getAttribute("html", "data-theme") === "dark", "dark mode is remembered");
-        check((await h.getAttribute("[data-theme-toggle]", "aria-label")) === T.dark, "…and the button offers light mode");
-        await shot(h, `${tag}-home-dark`);
+        check(!(await h.$("[data-theme-toggle]")) && !(await h.$(".topbar [data-install]")), "no dark mode button, no install button in the header");
         check(h.errors.length === 0, "no JavaScript errors on the home page" + (h.errors.length ? ": " + h.errors.join(" | ") : ""));
         await c.close();
       }
@@ -405,7 +409,9 @@ async function run() {
       {
         const c = await newContext(browser, { width, time: CLOSED_TIME, reducedMotion: "reduce" });
         const home = await open(c, `${BASE}/${q}`);
-        check(!(await home.$(".intro")), "no intro with « reduce motion »");
+        check(await home.$(".intro"), "the intro plays even with « reduce motion » (battery savers turn it on)");
+        await home.click(".intro");
+        await home.waitForTimeout(500);
         check(await home.$eval(".status", (e) => e.classList.contains("is-closed")) && (await home.textContent(".status")).includes(T.closed), "closed at 04:00");
         const p = await open(c, `${BASE}/commander/${q}`);
         await p.click('[data-add="bella-margarita"]');

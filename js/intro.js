@@ -5,26 +5,28 @@
  * 2. On its last frame the real logo is placed exactly over the logo in the film, then glides into its place in
  *    the header while the film fades away.
  * If the film can't play (autoplay blocked, slow network, old phone), the classic intro runs instead: the logo on
- * green with the tagline, then the same glide. A tap, a click or a key skips it. It plays once per visit
- * (sessionStorage), never with "reduce motion", and not at ?intro=0 (tests).
+ * green with the tagline, then the same glide. A tap on it, the « Passer » button, Esc or Enter skips it. It plays
+ * each time the home page is opened (not when coming back from another page of the site), and not at ?intro=0.
  * Kept on its own so the animation can be reworked later without touching the rest of the site.
  */
 (function () {
   const intro = document.getElementById("intro");
   if (!intro) return;
   const html = document.documentElement;
-  let seen = false;
-  try { seen = sessionStorage.getItem("cibo.intro") === "1"; } catch (e) { /* storage blocked */ }
+  // It plays each time the home page is opened, but not when the visitor comes back to it from another page of
+  // the site (or with the back button). Not at ?intro=0 (tests).
   const params = new URLSearchParams(location.search);
   const off = params.get("intro") === "0";
-  const reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let fromSite = false;
+  try { fromSite = !!document.referrer && new URL(document.referrer).origin === location.origin && new URL(document.referrer).pathname !== location.pathname; } catch (e) { /* no referrer */ }
+  let backForward = false;
+  try { const nav = performance.getEntriesByType("navigation")[0]; backForward = !!nav && nav.type === "back_forward"; } catch (e) { /* old browser */ }
   const done = () => {
     html.classList.remove("intro-on");
     html.classList.add("intro-done");
     intro.remove();
   };
-  if (seen || off || reduced) { done(); return; }
-  try { sessionStorage.setItem("cibo.intro", "1"); } catch (e) { /* storage blocked */ }
+  if (off || fromSite || backForward) { done(); return; }
 
   const logo = intro.querySelector(".intro__logo");
   const video = intro.querySelector(".intro__video");
@@ -104,14 +106,30 @@
     video.setAttribute("muted", "");
     video.addEventListener("playing", () => { started = true; }, { once: true });
     video.addEventListener("ended", () => handoff(kind), { once: true });
-    video.addEventListener("error", () => { if (!started) classic(); }, { once: true });
+    // an older copy of the site's service worker could block the film on phones that visited before: the new one
+    // takes over within a moment, then the film is asked for again, once
+    let retried = false;
+    const onError = () => {
+      if (started) return;
+      const sw = navigator.serviceWorker;
+      if (!retried && sw && sw.controller) {
+        retried = true;
+        let asked = false;
+        const again = () => { if (asked || finished) return; asked = true; const src = video.currentSrc || video.src; video.src = src.split("?")[0] + "?r=" + Date.now(); video.play().catch(() => {}); };
+        sw.addEventListener("controllerchange", again, { once: true });
+        later(again, 1200);
+        return;
+      }
+      classic();
+    };
+    video.addEventListener("error", onError);
     if (!video.dataset.kind) {
       video.poster = `/assets/intro/intro-poster-${kind}.jpg`;
       video.src = `/assets/intro/intro-${kind}.${mp4 ? "mp4" : "webm"}`;
-    } else if (video.error) return classic();
+    } else if (video.error) onError();
     intro.classList.add("has-video");
     const p = video.play();
-    if (p && p.catch) p.catch(() => { if (!started) classic(); });
+    if (p && p.catch) p.catch((e) => { if (!started && !(e && e.name === "AbortError")) classic(); });
     // phones on mobile data can be slow: the poster (the film's first picture) shows meanwhile, and if the film
     // still hasn't started after 4 s the classic intro plays
     later(() => { if (!started) classic(); }, 4000);
@@ -119,7 +137,8 @@
     later(finish, 10000);
   };
 
-  ["pointerdown", "keydown", "wheel", "touchstart"].forEach((ev) => window.addEventListener(ev, finish, { once: true, passive: true }));
-  intro.querySelector(".intro__skip").addEventListener("click", finish);
+  // a tap on it skips it (a finger only resting on the screen, or a scroll, does not), and so do Esc and Enter
+  intro.addEventListener("click", finish);
+  window.addEventListener("keydown", (e) => { if (e.key === "Escape" || e.key === "Enter" || e.key === " ") finish(); });
   if (params.get("introvideo") === "0") classic(); else film();
 })();

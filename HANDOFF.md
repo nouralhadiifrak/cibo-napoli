@@ -32,7 +32,7 @@ Intro in js/intro.js, kept separate on purpose; its films are in assets/intro/.
   (`homePhotos` in js/config.js: team, plate, outside). Placeholders say which photo goes where.
 - Intro: the 4 s pizza box film, then the logo glides into the header (classic logo-on-green intro as the fallback).
   The logo's place in each film's last frame is `LAST` in `js/intro.js`: measure it again if the films change.
-  Dark mode button in the header.
+  No dark-mode button (removed); « Installer » lives in the ☰ panel.
 - Google Maps: https://maps.app.goo.gl/SZC2hhTLup2dU2f38 (pin 33.7372332, -7.3142341; Place ID ChIJWcsRBQCxpw0RGfvunC8altw).
 
 ## Still open
