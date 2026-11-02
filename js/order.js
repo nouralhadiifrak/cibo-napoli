@@ -1,5 +1,5 @@
 /*
- * Cibo Napoli: the order page (/commander/). Menu (tiles, category bar, dishes 2 per row on phones), options asked
+ * Cibo Napoli: the order page (/commander/). Menu (tiles, category bar, dishes laid out as a road map by js/roadmap.js), options asked
  * before adding (pasta shape), big photo (click on PC, long press on phones), cart with pickup or delivery (map,
  * GPS or tap, the drawn zone, flat fee), then the order (js/orders.js) and the live tracker (js/common.js).
  */
@@ -36,10 +36,10 @@
           <h2 class="cat__title" id="cat-${cat.id}-title">${esc(L(cat.name))}</h2>
           ${cat.sub ? `<p class="cat__sub">${esc(L(cat.sub))}</p>` : ""}
         </header>
-        <div class="dishes">
+        <div class="dishes road">
           ${cat.items.map((it) => `
             <article class="dish" id="dish-${it.id}" data-id="${it.id}">
-              <div class="dish__media${it.image ? " has-photo" : ""}" ${it.image ? `role="button" tabindex="0" aria-label="${esc(t("menu.photo", { name: L(it.name) }))}"` : ""}>${media(it, cat, "dish")}</div>
+              <div class="dish__media${it.image ? " has-photo" : ""}" ${it.image ? `role="button" tabindex="0" aria-label="${esc(t("menu.photo", { name: L(it.name) }))}"` : ""}>${media(it, cat, "dish")}<span class="dish__qty" data-qty="${it.id}" hidden></span></div>
               <div class="dish__body">
                 <h3 class="dish__name">${esc(L(it.name))}</h3>
                 ${it.desc ? `<p class="dish__desc">${esc(L(it.desc))}</p>` : ""}
@@ -50,7 +50,6 @@
                   </button>
                 </div>
               </div>
-              <span class="dish__qty" data-qty="${it.id}" hidden></span>
             </article>`).join("")}
         </div>
       </section>`).join("");
@@ -75,6 +74,7 @@
     });
     setupPhotos();
     updateQtyBadges();
+    if (window.ROADMAP) window.ROADMAP.watch($("#menu-sections"));
   }
 
   /* ---------- Big photo ---------- */
@@ -135,6 +135,8 @@
     saveCart();
     CN.toast(t("menu.added", { name: L(ITEMS.get(id).item.name) }));
     bump(fromEl);
+    const hit = ITEMS.get(id);
+    CN.burst(fromEl, CN.emojiFor(hit.item, hit.cat));
   }
   function addFromMenu(id, btn) {
     const { item, cat } = ITEMS.get(id);
@@ -199,14 +201,15 @@
     return /^0[5-7]\d{8}$/.test(d) ? d : null;
   };
 
+  const shownLines = new Map(); // the amounts last shown per cart line, so they roll from there
   function renderCart() {
     const n = cartCount();
-    $$(".js-cart-count").forEach((el) => { el.textContent = n; el.hidden = !n; });
+    $$(".js-cart-count").forEach((el) => { CN.roll(el, n); el.hidden = !n; });
     const bar = $("#cart-bar");
     bar.hidden = !n;
     document.body.classList.toggle("has-cart-bar", !!n);
     bar.querySelector(".cart-bar__count").textContent = n === 1 ? t("cart.item") : t("cart.items", { n });
-    bar.querySelector(".cart-bar__total").textContent = money(subtotal());
+    CN.roll(bar.querySelector(".cart-bar__total"), money(subtotal()));
     const drawer = $("#cart");
     drawer.classList.toggle("is-empty", !n);
     $("#cart-lines").innerHTML = cart.map((l) => {
@@ -224,6 +227,14 @@
         <span class="line__total">${money(l.qty * item.price)}</span>
       </li>`;
     }).join("");
+    $$("#cart-lines .line").forEach((li) => {
+      const l = cart.find((x) => x.key === li.dataset.key);
+      const was = shownLines.get(l.key);
+      const total = money(l.qty * ITEMS.get(l.id).item.price);
+      CN.roll(li.querySelector(".line__total"), total, was ? was.total : total);
+      CN.roll(li.querySelector(".stepper__n"), l.qty, was ? was.qty : l.qty);
+      shownLines.set(l.key, { total, qty: l.qty });
+    });
     $$('input[name="mode"]').forEach((r) => { r.checked = r.value === state.mode; });
     $("#delivery-box").hidden = state.mode !== "delivery";
     $("#pickup-hint").hidden = state.mode !== "pickup";
@@ -235,10 +246,10 @@
       if (!drawer.hidden) ensureDeliveryMap();
     }
     $("#pay-note").textContent = t(state.mode === "delivery" ? "cart.pay.delivery" : "cart.pay.pickup");
-    $("#sum-sub").textContent = money(subtotal());
+    CN.roll($("#sum-sub"), money(subtotal()));
     $("#sum-fee-row").hidden = state.mode !== "delivery";
     $("#sum-fee").textContent = state.mode === "delivery" ? (inZone() ? money(C.delivery.fee) : "—") : money(0);
-    $("#sum-total").textContent = money(subtotal() + deliveryFee());
+    CN.roll($("#sum-total"), money(subtotal() + deliveryFee()));
     const go = $("#order-btn");
     const open = CN.isOpen();
     go.disabled = state.sending || !n || !open;

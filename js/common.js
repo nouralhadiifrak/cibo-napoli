@@ -243,16 +243,25 @@
   }
 
   /* ---------- Home: hero, reviews, info ---------- */
+  // basil leaves and specks of flour around the plate, and the round « La Buona Cucina » badge
+  const HERO_LEAF = (x, y, r, s) => `<svg class="hero__leaf" style="left:${x}%;top:${y}%;transform:rotate(${r}deg) scale(${s})" viewBox="0 0 60 40" aria-hidden="true"><defs><linearGradient id="hl${x}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5fae3c"/><stop offset="1" stop-color="#256b1f"/></linearGradient></defs><path d="M3 20C14 3 42 1 57 20 42 39 14 37 3 20z" fill="url(#hl${x})"/><path d="M5 20h48M18 20l-5-7M28 20l-4-9M38 20l-3-8M18 20l-4 6M28 20l-3 8M38 20l-2 7" stroke="#bfe3a5" stroke-opacity=".55" stroke-width="1.1" fill="none" stroke-linecap="round"/></svg>`;
+  const HERO_DECOR = `<span class="hero__glow" aria-hidden="true"></span><span class="hero__dust" aria-hidden="true"></span>${HERO_LEAF(84, 6, 28, 1)}${HERO_LEAF(-2, 70, -150, .8)}${HERO_LEAF(78, 84, 140, .62)}`;
+  const HERO_BADGE = `<span class="hero__badge" aria-hidden="true"><span class="hero__badge-in"><img src="/assets/brand/logo-white.webp" alt="" width="640" height="182"><span>La Buona Cucina Napolitana</span></span></span>`;
   function renderHero() {
     const media = $("#hero-media");
     if (!media) return;
     const facts = $("#hero-facts");
     if (facts) {
+      const ico = {
+        clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+        bike: '<circle cx="6.5" cy="16.5" r="3"/><circle cx="17.5" cy="16.5" r="3"/><path d="M6.5 16.5l4-7h4l3 7M10 9.5H8M14.5 9.5l1-3h2.5"/>',
+        leaf: '<path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z"/><path d="M5 19l8-8"/>',
+      };
       facts.innerHTML = [
-        t("hero.fact.hours", { open: hourLabel(C.hours.open), close: hourLabel(C.hours.close) }),
-        t("hero.fact.delivery", { fee: money(C.delivery.fee) }),
-        t("hero.fact.pickup"),
-      ].map((f) => `<li>${esc(f)}</li>`).join("");
+        ["clock", t("hero.f1t"), `${hourLabel(C.hours.open)} – ${hourLabel(C.hours.close)}`],
+        ["bike", t("hero.f2t"), t("hero.f2s", { fee: money(C.delivery.fee) })],
+        ["leaf", t("hero.f3t"), t("hero.f3s")],
+      ].map(([i, a, b]) => `<li><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ico[i]}</svg><span><strong>${esc(a)}</strong>${esc(b)}</span></li>`).join("");
     }
     const H = C.heroMedia;
     if (H && H.video) {
@@ -266,9 +275,9 @@
         if (p && p.then) p.then(() => media.replaceChildren(v)).catch(() => { /* autoplay blocked: keep the still */ });
       });
     } else if (H && H.image) {
-      media.innerHTML = `<div class="hero__plate"><img class="hero__pizza${H.spin ? " is-spinning" : ""}" src="${esc(H.image)}"${H.small ? ` srcset="${esc(H.small)} 400w, ${esc(H.image)} 560w" sizes="(max-width: 899px) 82vw, 440px"` : ""} alt="Pizza Peperoni · Cibo Napoli" width="560" height="560" fetchpriority="high"></div>`;
+      media.innerHTML = `<div class="hero__stage">${HERO_DECOR}<div class="hero__plate"><img class="hero__pizza${H.spin ? " is-spinning" : ""}" src="${esc(H.image)}"${H.small ? ` srcset="${esc(H.small)} 480w, ${esc(H.image)} 960w" sizes="(max-width: 899px) 78vw, 520px"` : ""} alt="Pizza · Cibo Napoli" width="960" height="960" fetchpriority="high"></div>${HERO_BADGE}</div>`;
     } else {
-      media.innerHTML = `<div class="hero__plate">${window.ART.svg("pizza", "hero__pizza is-spinning")}</div>`;
+      media.innerHTML = `<div class="hero__stage">${HERO_DECOR}<div class="hero__plate">${window.ART.svg("pizza", "hero__pizza is-spinning")}</div>${HERO_BADGE}</div>`;
     }
   }
   const reviewUrl = () => `https://search.google.com/local/writereview?placeid=${SITE.placeId}`;
@@ -277,9 +286,9 @@
     if (!list) return;
     list.innerHTML = window.REVIEWS.map((r) => `
       <figure class="review">
-        <div class="review__stars" aria-label="${r.stars}/5">${"★".repeat(r.stars)}</div>
+        <div class="review__top"><span class="review__avatar" aria-hidden="true">${esc(r.author[0])}</span><span class="review__stars" aria-label="${r.stars}/5">${"★".repeat(r.stars)}</span><span class="review__mark" aria-hidden="true">&rdquo;</span></div>
         <blockquote class="review__text" lang="${r.lang}">${esc(r.text)}</blockquote>
-        <figcaption class="review__who"><span class="review__avatar" aria-hidden="true">${esc(r.author[0])}</span>${esc(r.author)}<span class="review__src">${esc(t("reviews.ago"))}</span></figcaption>
+        <figcaption class="review__who"><span class="review__name">${esc(r.author)}</span><span class="review__src">${esc(t("reviews.ago"))}</span></figcaption>
       </figure>`).join("");
     $$("[data-review-link]").forEach((a) => { a.href = reviewUrl(); });
   }
@@ -417,19 +426,101 @@
     window.addEventListener("offline", () => toast(t("toast.offline")));
   }
 
+  /* ---------- Rolling numbers (each digit rolls to its new value, like an odometer) ----------
+   * roll(el, "135 DH") · roll(el, value, from) to roll from a given old value (an element drawn again).
+   * The real text stays in the element (screen readers, copy); the rolling strip is drawn by CSS (.roll__d::after). */
+  const reduceMotion = () => !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  function roll(el, value, from) {
+    if (!el) return;
+    value = String(value);
+    const prev = from != null ? String(from) : el.dataset.roll;
+    if (from == null && prev === value && el.querySelector(".roll__d")) return;
+    el.dataset.roll = value;
+    el.classList.add("roll");
+    const chars = Array.from(value);
+    const old = prev != null ? Array.from(prev) : null;
+    const animate = !!old && prev !== value && !reduceMotion();
+    const oldDigit = (fromRight) => { const c = old && old[old.length - 1 - fromRight]; return c && /\d/.test(c) ? c : "0"; };
+    el.innerHTML = chars.map((c, i) => {
+      if (!/\d/.test(c)) return esc(c);
+      const start = animate ? oldDigit(chars.length - 1 - i) : c;
+      return `<span class="roll__d" style="--d:${start};--delay:${animate ? i * 55 : 0}ms" data-to="${c}"><i>${c}</i></span>`;
+    }).join("");
+    if (animate) {
+      void el.offsetWidth;
+      el.querySelectorAll(".roll__d").forEach((d) => d.style.setProperty("--d", d.dataset.to));
+    }
+  }
+
+  /* ---------- Flying emojis from a button (after « add to cart ») ---------- */
+  const EMOJI_ART = { pizza: "🍕", pasta: "🍝", ravioli: "🥟", lasagna: "🍝", plate: "🍗", dessert: "🍰", drink: "🥤" };
+  const EMOJI_WORDS = [
+    [/gamber|gambas/, "🦐"], [/tonno/, "🐟"], [/fungh|champignon|truff/, "🍄"], [/pollo|poulet|milanese/, "🍗"],
+    [/diavola|arrabiata|chorizo|peperoni|fuoco/, "🌶️"], [/pesto|verdura/, "🌿"], [/formaggi|stracciatella|alfredo/, "🧀"],
+    [/carne|bolognaise|maradona/, "🥩"], [/margarita|marinara|napolitaine|nonna/, "🍅"], [/tiramisu/, "☕"],
+    [/panna|creme-brulee/, "🍮"], [/cheesecake/, "🍰"], [/mangue/, "🥭"], [/fruits-rouges/, "🍓"],
+  ];
+  function emojiFor(item, cat) {
+    const main = (item && item.emoji) || EMOJI_ART[cat && cat.art] || "🍽️";
+    const hit = item && EMOJI_WORDS.find(([re]) => re.test(item.id));
+    return hit && hit[1] !== main ? [main, main, hit[1]] : [main];
+  }
+  function burst(fromEl, emojis) {
+    if (!fromEl || !emojis || !emojis.length || reduceMotion() || !document.body.animate) return;
+    const r = fromEl.getBoundingClientRect();
+    if (!r.width) return;
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const layer = document.createElement("div");
+    layer.className = "burst";
+    layer.setAttribute("aria-hidden", "true");
+    document.body.appendChild(layer);
+    const n = 10;
+    for (let i = 0; i < n; i++) {
+      const e = document.createElement("span");
+      e.textContent = emojis[i % emojis.length];
+      e.style.left = `${cx}px`;
+      e.style.top = `${cy}px`;
+      e.style.fontSize = `${20 + Math.random() * 14}px`;
+      layer.appendChild(e);
+      const dx = (Math.random() - 0.5) * 200, dy = -110 - Math.random() * 130, rot = (Math.random() - 0.5) * 120;
+      e.animate([
+        { transform: "translate(-50%, -50%) scale(.2)", opacity: 0 },
+        { transform: `translate(-50%, -50%) translate(${dx * 0.35}px, ${dy * 0.45}px) scale(1.15)`, opacity: 1, offset: 0.25 },
+        { transform: `translate(-50%, -50%) translate(${dx}px, ${dy}px) rotate(${rot}deg) scale(.85)`, opacity: 0 },
+      ], { duration: 900 + Math.random() * 500, delay: i * 28, easing: "cubic-bezier(.2, .7, .3, 1)", fill: "both" });
+    }
+    setTimeout(() => layer.remove(), 1900);
+  }
+
   window.CN = {
     C, SITE, LANG, $, $$, esc, store, t, L, LFR, withLang, money, nf, casaParts, toMin, isOpen, hourLabel, clock,
     openLayer, closeLayer, toast, loadLeaflet, baseMap, pinIcon, distanceKm, inZone, startTracking, showTracker, waLink, shortNum,
-    installNudge,
+    installNudge, roll, burst, emojiFor, reduceMotion,
   };
+
+  /* ---------- Turning rings on the buttons: only those on screen turn (saves the phone's battery) ---------- */
+  function ringsOnScreen() {
+    if (!("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver((entries) => entries.forEach((e) => e.target.classList.toggle("ring-off", !e.isIntersecting)));
+    const seen = new WeakSet();
+    const scan = () => document.querySelectorAll(".btn:not(.btn--text), .dish__add, .sig__add").forEach((b) => {
+      if (seen.has(b)) return;
+      seen.add(b);
+      b.classList.add("ring-off");
+      io.observe(b);
+    });
+    scan();
+    new MutationObserver(() => { clearTimeout(ringsOnScreen.t); ringsOnScreen.t = setTimeout(scan, 100); }).observe(document.body, { childList: true, subtree: true });
+  }
 
   /* ---------- Start ---------- */
   applyText();
   // the cart count in the header on every page (the order page keeps it up to date itself)
   const inCart = (store.get("cibo.cart.v1") || []).reduce((n, l) => n + (l.qty || 0), 0);
-  $$(".js-cart-count").forEach((el) => { el.textContent = inCart; el.hidden = !inCart; });
+  $$(".js-cart-count").forEach((el) => { roll(el, inCart); el.hidden = !inCart; });
   setupHeader();
   setupTheme();
+  ringsOnScreen();
   renderHero();
   renderReviews();
   renderInfo();

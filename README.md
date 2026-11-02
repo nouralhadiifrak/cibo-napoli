@@ -15,11 +15,25 @@ Three pages: **home** `/`, **order** `/commander/`, **book a table** `/reserver/
 - Intro on the home page (a tap skips it, `js/intro.js`): a 4 s film (the pizza alone, the box slides in under it, the lid
   closes, the camera dives onto the logo on green), tall on phones and wide on computers (`assets/intro/`, MP4 + WebM).
   On its last frame the real logo takes the place of the one in the film and glides into the header. If the film
-  can't play (autoplay blocked, slow network), the classic intro runs: the logo on green, then the same glide
-- Home: « Le goût de l'Italie dans votre assiette », buttons La carte / Réserver side by side and Itinéraire under
-  them, a turning pizza photo (the Peperoni cut from the owner's menu, `heroMedia` in `js/config.js`), then our
-  story, Google reviews, info and the map with the delivery zone
-- Order page: 7 category tiles, a sticky category bar, 45 dishes (2 per row on phones), each with its description
+  can't play (autoplay blocked, slow network), the classic intro runs: the logo on green, then the same glide.
+  The film's address is set by a tiny script right under the `<video>` tag so phones start loading it at once; the
+  poster shows while it loads, and the classic intro takes over if it hasn't started after 4 s. The service worker
+  leaves videos alone (phones fetch them in pieces, which the cache can't store)
+- Look of the home and menu pages: forest green with a touch of mandarin on #100e0b, with « aura » glows (`.aura`,
+  4 blurred layers blended with `screen`). Every button has a ring of colours that keeps turning (only while on
+  screen). Adding a dish sends flying emojis of that dish from the button (`CN.burst`); prices, quantities and the
+  cart count roll digit by digit (`CN.roll`), and the story numbers roll up from zero. The language choice sits
+  next to the cart, on phones too
+- Home, dark like a fine-dining page (`.lux` in `css/style.css`, `js/home.js`): « Le goût de l'Italie dans votre
+  assiette », buttons La Carte / Réserver une table and Itinéraire under them, 3 facts (hours, delivery, produce
+  from Italy), the pizza on its white plate turning slowly with a warm light under it (`heroMedia`). Then « La
+  collection signature » (4 dishes from the menu, `signature` in `js/config.js`, the cart button adds the dish; on
+  phones they sit side by side and drift slowly to the left, a finger pauses them),
+  « Notre histoire » (text, the Cibo Napoli signature, numbers counted from the menu, 3 photos: the owner and the
+  team, a plate, the restaurant: `homePhotos` in `js/config.js`, placeholders until then), « Des moments
+  inoubliables » (the Google reviews, sliding sideways on phones) and the info with the map
+- Order page: 7 category tiles, a sticky category bar, 45 dishes laid out as a road map (`js/roadmap.js`): plates
+  left, right, left…, a golden line from each plate to the next and drawn vegetables along the way; each with its description
   and price in DH. Fresh pasta asks for the shape (fusilli, spaghetti, tagliatelle) before it goes in the cart.
   A dish with a photo opens it big (click on PC, long press on phones); a dish without one shows a drawn tile
 - Cart: pickup or delivery (map, GPS or tap, inside the drawn zone, 10 DH), clear total, payment note
@@ -119,7 +133,8 @@ The logo files are in `assets/brand/` (white for green backgrounds, green for li
 
 Only the owner's photos are used, never stock or internet photos. A dish photo goes in `assets/photos/<dish id>.webp`
 (square, about 600 × 600), then set `image: "/assets/photos/<dish id>.webp"` on the dish in `js/menu-data.js`.
-A category cover: `image` on the category. The hero: `heroMedia` in `js/config.js`.
+A category cover: `image` on the category. The hero: `heroMedia` in `js/config.js`. The home page's « Notre histoire »
+photos: `homePhotos` in `js/config.js` (team, plate, outside). The signature dishes show their dish photo.
 The menu screenshots and review screenshots the owner sent are kept in `docs/source/`.
 
 ## After changing things

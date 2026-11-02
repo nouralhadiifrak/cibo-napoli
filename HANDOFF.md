@@ -25,7 +25,11 @@ Intro in js/intro.js, kept separate on purpose; its films are in assets/intro/.
 - Payment: cash on delivery; cash or card for pickup.
 - Drinks: Hawai, Coca-Cola, Sprite, Schweppes, Poms; no size mentioned.
 - Two accounts later: one owner, one staff.
-- Hero: the Peperoni from the menu scan, enlarged (soft); replace with the original photo when it comes. Domain: not bought yet.
+- Hero: the pizza on a white plate, cut out (assets/hero/pizza-plate*.webp), on the dark home page with a warm light
+  under it. Domain: not bought yet.
+- Home and menu pages are always dark (`.lux`), whatever the theme button says; the other pages follow the theme.
+- Waiting for the owner's photos: the 4 signature dishes (`image` in js/menu-data.js) and the 3 story photos
+  (`homePhotos` in js/config.js: team, plate, outside). Placeholders say which photo goes where.
 - Intro: the 4 s pizza box film, then the logo glides into the header (classic logo-on-green intro as the fallback).
   The logo's place in each film's last frame is `LAST` in `js/intro.js`: measure it again if the films change.
   Dark mode button in the header.

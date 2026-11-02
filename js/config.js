@@ -59,9 +59,16 @@ window.CONFIG = {
   booking: { first: "12:00", last: "23:00", maxPeople: 20, maxDays: 60 },
   // How the customer pays.
   payment: { delivery: ["cash"], pickup: ["cash", "card"] },
-  // Hero picture: the Peperoni from the owner's menu (cut out round, it turns slowly; spin: false stops it).
+  // Hero picture: the pizza on its white plate, cut out (transparent around the plate) so the warm light under it
+  // shows on the dark background. It turns slowly; spin: false stops it.
   // A video also works: { video: "/assets/hero/hero.mp4", poster: "/assets/hero/hero.webp" }. null = the drawn pizza.
-  heroMedia: { image: "/assets/hero/pizza-peperoni.webp", small: "/assets/hero/pizza-peperoni-400.webp", spin: true },
+  heroMedia: { image: "/assets/hero/pizza-plate.webp", small: "/assets/hero/pizza-plate-480.webp", spin: true },
+  // Home page, « La collection signature »: 4 dish ids from js/menu-data.js (name, text and price come from there).
+  // Their photo is the dish's own image in menu-data.js; until then a drawn placeholder with « Photo à venir ».
+  signature: ["pizza-cibo-napoli", "truffe-mafia", "ravioli-al-truffo", "lasagne-nonna"],
+  // Home page, « Notre histoire »: the 3 photos (e.g. "/assets/home/team.webp", about 1200 px wide, WebP).
+  // Empty = a placeholder that says which photo goes there.
+  homePhotos: { team: "", plate: "", outside: "" },
   // Online orders.
   //  - supabaseUrl empty = DEMO MODE: orders stay in this browser (localStorage). Open /commandes/ in another tab of
   //    the same browser to play the restaurant. Nothing leaves the phone.
