@@ -4,10 +4,10 @@
  * if the network fails or takes more than 4 s). Pictures, fonts and libraries: the saved copy, refreshed in the
  * background. Orders, maps and the staff app are never cached here. Raise VERSION to drop every saved copy.
  */
-const VERSION = "cn-v4";
+const VERSION = "cn-v5";
 const CORE = [
-  "/", "/commander/", "/reserver/", "/css/style.css?v=4", "/js/intro.js?v=4", "/js/config.js?v=4", "/js/i18n.js?v=4",
-  "/js/menu-data.js?v=2", "/js/reviews.js?v=2", "/js/art.js?v=2", "/js/orders.js?v=2", "/js/common.js?v=4",
+  "/", "/commander/", "/reserver/", "/css/style.css?v=5", "/js/intro.js?v=5", "/js/config.js?v=4", "/js/i18n.js?v=5",
+  "/js/menu-data.js?v=2", "/js/reviews.js?v=2", "/js/art.js?v=2", "/js/orders.js?v=2", "/js/common.js?v=5",
   "/js/home.js?v=4", "/js/roadmap.js?v=4", "/js/order.js?v=4", "/js/reserve.js?v=2",
   "/assets/brand/logo-white.webp", "/assets/icons/icon-192.png", "/assets/hero/pizza-plate-480.webp",
   "/assets/fonts/dm-sans-latin.woff2", "/assets/fonts/playfair-display-italic-latin.woff2",
