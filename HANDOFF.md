@@ -14,7 +14,7 @@ Tests: `node tests/site.test.js` (390 px and 1280 px, FR and EN); check the scre
 After any CSS/JS change raise the ?v= numbers (and VERSION in sw.js).
 Old phones: no aspect-ratio or :has() without fallback; a still image if video autoplay is blocked.
 Never commit secrets. Never use stock photos: only the owner's.
-Animations will be reworked later (intro in js/intro.js, kept separate on purpose).
+Intro in js/intro.js, kept separate on purpose; its films are in assets/intro/.
 
 ## Facts from the owner
 
@@ -26,7 +26,9 @@ Animations will be reworked later (intro in js/intro.js, kept separate on purpos
 - Drinks: Hawai, Coca-Cola, Sprite, Schweppes, Poms; no size mentioned.
 - Two accounts later: one owner, one staff.
 - Hero: the Peperoni from the menu scan, enlarged (soft); replace with the original photo when it comes. Domain: not bought yet.
-- Intro: about 3 s. Dark mode button in the header.
+- Intro: the 4 s pizza box film, then the logo glides into the header (classic logo-on-green intro as the fallback).
+  The logo's place in each film's last frame is `LAST` in `js/intro.js`: measure it again if the films change.
+  Dark mode button in the header.
 - Google Maps: https://maps.app.goo.gl/SZC2hhTLup2dU2f38 (pin 33.7372332, -7.3142341; Place ID ChIJWcsRBQCxpw0RGfvunC8altw).
 
 ## Still open

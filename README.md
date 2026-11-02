@@ -12,7 +12,10 @@ Three pages: **home** `/`, **order** `/commander/`, **book a table** `/reserver/
 - Header: ☰ menu on phones (all the titles, language, dark mode, install), titles in the middle on PC;
   dark mode button (remembered on the phone; the first time it follows the phone's setting);
   « Installer » button with the app icon when the phone can install the app
-- Intro on the home page (about 3 s, a tap skips it): the logo on green, then it glides into the header (`js/intro.js`)
+- Intro on the home page (a tap skips it, `js/intro.js`): a 4 s film (the pizza alone, the box slides in under it, the lid
+  closes, the camera dives onto the logo on green), tall on phones and wide on computers (`assets/intro/`, MP4 + WebM).
+  On its last frame the real logo takes the place of the one in the film and glides into the header. If the film
+  can't play (autoplay blocked, slow network), the classic intro runs: the logo on green, then the same glide
 - Home: « Le goût de l'Italie dans votre assiette », buttons La carte / Réserver side by side and Itinéraire under
   them, a turning pizza photo (the Peperoni cut from the owner's menu, `heroMedia` in `js/config.js`), then our
   story, Google reviews, info and the map with the delivery zone
