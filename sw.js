@@ -4,12 +4,12 @@
  * if the network fails or takes more than 4 s). Pictures, fonts and libraries: the saved copy, refreshed in the
  * background. Orders, maps and the staff app are never cached here. Raise VERSION to drop every saved copy.
  */
-const VERSION = "cn-v3";
+const VERSION = "cn-v4";
 const CORE = [
-  "/", "/commander/", "/reserver/", "/css/style.css?v=3", "/js/intro.js?v=3", "/js/config.js?v=2", "/js/i18n.js?v=2",
-  "/js/menu-data.js?v=2", "/js/reviews.js?v=2", "/js/art.js?v=2", "/js/orders.js?v=2", "/js/common.js?v=2",
-  "/js/order.js?v=2", "/js/reserve.js?v=2",
-  "/assets/brand/logo-white.webp", "/assets/icons/icon-192.png", "/assets/hero/pizza-peperoni-400.webp",
+  "/", "/commander/", "/reserver/", "/css/style.css?v=4", "/js/intro.js?v=4", "/js/config.js?v=4", "/js/i18n.js?v=4",
+  "/js/menu-data.js?v=2", "/js/reviews.js?v=2", "/js/art.js?v=2", "/js/orders.js?v=2", "/js/common.js?v=4",
+  "/js/home.js?v=4", "/js/roadmap.js?v=4", "/js/order.js?v=4", "/js/reserve.js?v=2",
+  "/assets/brand/logo-white.webp", "/assets/icons/icon-192.png", "/assets/hero/pizza-plate-480.webp",
   "/assets/fonts/dm-sans-latin.woff2", "/assets/fonts/playfair-display-italic-latin.woff2",
   "/assets/fonts/playfair-display-latin.woff2", "/assets/fonts/pinyon-script-latin.woff2",
 ];
@@ -29,6 +29,9 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (req.method !== "GET" || url.origin !== location.origin) return;
   if (url.pathname.startsWith("/commandes/")) return;
+  // videos are fetched in pieces (Range requests, 206 answers) that the cache can't store: let the browser handle
+  // them directly, otherwise the intro film fails on phones that already have this service worker
+  if (req.headers.has("range") || req.destination === "video" || req.destination === "audio" || /\.(mp4|webm)$/.test(url.pathname)) return;
   const isPage = req.mode === "navigate";
   const isCode = /\.(css|js)$/.test(url.pathname) && !url.pathname.startsWith("/vendor/");
   if (isPage || isCode) {

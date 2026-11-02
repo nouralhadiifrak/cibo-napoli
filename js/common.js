@@ -243,16 +243,25 @@
   }
 
   /* ---------- Home: hero, reviews, info ---------- */
+  // basil leaves and specks of flour around the plate, and the round « La Buona Cucina » badge
+  const HERO_LEAF = (x, y, r, s) => `<svg class="hero__leaf" style="left:${x}%;top:${y}%;transform:rotate(${r}deg) scale(${s})" viewBox="0 0 60 40" aria-hidden="true"><defs><linearGradient id="hl${x}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5fae3c"/><stop offset="1" stop-color="#256b1f"/></linearGradient></defs><path d="M3 20C14 3 42 1 57 20 42 39 14 37 3 20z" fill="url(#hl${x})"/><path d="M5 20h48M18 20l-5-7M28 20l-4-9M38 20l-3-8M18 20l-4 6M28 20l-3 8M38 20l-2 7" stroke="#bfe3a5" stroke-opacity=".55" stroke-width="1.1" fill="none" stroke-linecap="round"/></svg>`;
+  const HERO_DECOR = `<span class="hero__glow" aria-hidden="true"></span><span class="hero__dust" aria-hidden="true"></span>${HERO_LEAF(84, 6, 28, 1)}${HERO_LEAF(-2, 70, -150, .8)}${HERO_LEAF(78, 84, 140, .62)}`;
+  const HERO_BADGE = `<span class="hero__badge" aria-hidden="true"><span class="hero__badge-in"><img src="/assets/brand/logo-white.webp" alt="" width="640" height="182"><span>La Buona Cucina Napolitana</span></span></span>`;
   function renderHero() {
     const media = $("#hero-media");
     if (!media) return;
     const facts = $("#hero-facts");
     if (facts) {
+      const ico = {
+        clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+        bike: '<circle cx="6.5" cy="16.5" r="3"/><circle cx="17.5" cy="16.5" r="3"/><path d="M6.5 16.5l4-7h4l3 7M10 9.5H8M14.5 9.5l1-3h2.5"/>',
+        leaf: '<path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z"/><path d="M5 19l8-8"/>',
+      };
       facts.innerHTML = [
-        t("hero.fact.hours", { open: hourLabel(C.hours.open), close: hourLabel(C.hours.close) }),
-        t("hero.fact.delivery", { fee: money(C.delivery.fee) }),
-        t("hero.fact.pickup"),
-      ].map((f) => `<li>${esc(f)}</li>`).join("");
+        ["clock", t("hero.f1t"), `${hourLabel(C.hours.open)} – ${hourLabel(C.hours.close)}`],
+        ["bike", t("hero.f2t"), t("hero.f2s", { fee: money(C.delivery.fee) })],
+        ["leaf", t("hero.f3t"), t("hero.f3s")],
+      ].map(([i, a, b]) => `<li><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${ico[i]}</svg><span><strong>${esc(a)}</strong>${esc(b)}</span></li>`).join("");
     }
     const H = C.heroMedia;
     if (H && H.video) {
@@ -266,9 +275,9 @@
         if (p && p.then) p.then(() => media.replaceChildren(v)).catch(() => { /* autoplay blocked: keep the still */ });
       });
     } else if (H && H.image) {
-      media.innerHTML = `<div class="hero__plate"><img class="hero__pizza${H.spin ? " is-spinning" : ""}" src="${esc(H.image)}"${H.small ? ` srcset="${esc(H.small)} 400w, ${esc(H.image)} 560w" sizes="(max-width: 899px) 82vw, 440px"` : ""} alt="Pizza Peperoni · Cibo Napoli" width="560" height="560" fetchpriority="high"></div>`;
+      media.innerHTML = `<div class="hero__stage">${HERO_DECOR}<div class="hero__plate"><img class="hero__pizza${H.spin ? " is-spinning" : ""}" src="${esc(H.image)}"${H.small ? ` srcset="${esc(H.small)} 480w, ${esc(H.image)} 960w" sizes="(max-width: 899px) 78vw, 520px"` : ""} alt="Pizza · Cibo Napoli" width="960" height="960" fetchpriority="high"></div>${HERO_BADGE}</div>`;
     } else {
-      media.innerHTML = `<div class="hero__plate">${window.ART.svg("pizza", "hero__pizza is-spinning")}</div>`;
+      media.innerHTML = `<div class="hero__stage">${HERO_DECOR}<div class="hero__plate">${window.ART.svg("pizza", "hero__pizza is-spinning")}</div>${HERO_BADGE}</div>`;
     }
   }
   const reviewUrl = () => `https://search.google.com/local/writereview?placeid=${SITE.placeId}`;
@@ -277,9 +286,9 @@
     if (!list) return;
     list.innerHTML = window.REVIEWS.map((r) => `
       <figure class="review">
-        <div class="review__stars" aria-label="${r.stars}/5">${"★".repeat(r.stars)}</div>
+        <div class="review__top"><span class="review__avatar" aria-hidden="true">${esc(r.author[0])}</span><span class="review__stars" aria-label="${r.stars}/5">${"★".repeat(r.stars)}</span><span class="review__mark" aria-hidden="true">&rdquo;</span></div>
         <blockquote class="review__text" lang="${r.lang}">${esc(r.text)}</blockquote>
-        <figcaption class="review__who"><span class="review__avatar" aria-hidden="true">${esc(r.author[0])}</span>${esc(r.author)}<span class="review__src">${esc(t("reviews.ago"))}</span></figcaption>
+        <figcaption class="review__who"><span class="review__name">${esc(r.author)}</span><span class="review__src">${esc(t("reviews.ago"))}</span></figcaption>
       </figure>`).join("");
     $$("[data-review-link]").forEach((a) => { a.href = reviewUrl(); });
   }

@@ -27,7 +27,6 @@
   try { sessionStorage.setItem("cibo.intro", "1"); } catch (e) { /* storage blocked */ }
 
   const logo = intro.querySelector(".intro__logo");
-  const target = document.querySelector(".brand__logo");
   const video = intro.querySelector(".intro__video");
   let finished = false;
   let mode = "";
@@ -48,6 +47,7 @@
 
   // FLIP: move the big logo onto the header logo.
   const fly = () => {
+    const target = document.querySelector(".brand__logo");
     if (finished || !target || !logo) return finish();
     const a = logo.getBoundingClientRect();
     const b = target.getBoundingClientRect();
@@ -97,22 +97,26 @@
     const webm = video.canPlayType('video/webm; codecs="vp9"');
     if (!mp4 && !webm) return classic();
     mode = "video";
-    const kind = window.innerWidth >= window.innerHeight ? "landscape" : "portrait";
+    // the small script right after the <video> tag (index.html) has usually started the download already
+    const kind = video.dataset.kind || (window.innerWidth >= window.innerHeight ? "landscape" : "portrait");
     let started = false;
     video.muted = true;
     video.setAttribute("muted", "");
-    video.poster = `/assets/intro/intro-poster-${kind}.jpg`;
     video.addEventListener("playing", () => { started = true; }, { once: true });
     video.addEventListener("ended", () => handoff(kind), { once: true });
     video.addEventListener("error", () => { if (!started) classic(); }, { once: true });
-    video.src = `/assets/intro/intro-${kind}.${mp4 ? "mp4" : "webm"}`;
+    if (!video.dataset.kind) {
+      video.poster = `/assets/intro/intro-poster-${kind}.jpg`;
+      video.src = `/assets/intro/intro-${kind}.${mp4 ? "mp4" : "webm"}`;
+    } else if (video.error) return classic();
     intro.classList.add("has-video");
     const p = video.play();
     if (p && p.catch) p.catch(() => { if (!started) classic(); });
-    // never wait for a slow network: if the film hasn't started after 1.5 s, the classic intro plays
-    later(() => { if (!started) classic(); }, 1500);
+    // phones on mobile data can be slow: the poster (the film's first picture) shows meanwhile, and if the film
+    // still hasn't started after 4 s the classic intro plays
+    later(() => { if (!started) classic(); }, 4000);
     // and never block the page, whatever happens
-    later(finish, 7500);
+    later(finish, 10000);
   };
 
   ["pointerdown", "keydown", "wheel", "touchstart"].forEach((ev) => window.addEventListener(ev, finish, { once: true, passive: true }));

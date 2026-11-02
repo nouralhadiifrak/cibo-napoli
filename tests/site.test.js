@@ -82,8 +82,8 @@ async function run() {
       const tag = `${lang}-${width}`;
       const q = lang === "en" ? "?lang=en" : "?";
       const T = lang === "en"
-        ? { title: "The taste of Italy on your plate", order: "Order", pasta: "Which pasta?", added: "added", accepted: "Accepted", done: "Buon appetito!", cancelled: "Order cancelled", outZone: "outside our delivery area", closed: "Closed", review: "Write a Google review", buttons: ["Menu", "Book a table", "Directions"], sent: "Request sent!", dark: "Light mode" }
-        : { title: "Le goût de l'Italie dans votre assiette", order: "Commander", pasta: "Quelle pâte ?", added: "ajouté", accepted: "Acceptée", done: "Bon appétit !", cancelled: "Commande annulée", outZone: "hors de notre zone", closed: "Fermé", review: "Laisser un avis Google", buttons: ["La carte", "Réserver", "Itinéraire"], sent: "Demande envoyée !", dark: "Mode clair" };
+        ? { title: "The taste of Italy on your plate", order: "Order", pasta: "Which pasta?", added: "added", accepted: "Accepted", done: "Buon appetito!", cancelled: "Order cancelled", outZone: "outside our delivery area", closed: "Closed", review: "Write a Google review", buttons: ["Order now", "Book a table", "Directions"], sig: "Signature collection", xp: "Unforgettable experiences", sent: "Request sent!", dark: "Light mode" }
+        : { title: "Le goût de l'Italie dans votre assiette", order: "Commander", pasta: "Quelle pâte ?", added: "ajouté", accepted: "Acceptée", done: "Bon appétit !", cancelled: "Commande annulée", outZone: "hors de notre zone", closed: "Fermé", review: "Laisser un avis Google", buttons: ["Commander", "Réserver une table", "Itinéraire"], sig: "La collection signature", xp: "Des moments inoubliables", sent: "Demande envoyée !", dark: "Mode clair" };
       const amp = q === "?" ? "" : "&";
 
       section(`[${tag}] intro`);
@@ -137,7 +137,24 @@ async function run() {
         check(btns[0].href.startsWith("/commander/") && btns[1].href.startsWith("/reserver/") && /maps/.test(btns[2].href), "they open the order page, the booking page and Google Maps");
         check(await h.$eval(".hero__pizza", (e) => e.tagName === "IMG" && /pizza/.test(e.src) && getComputedStyle(e).animationName === "spin"), "a real pizza photo that turns");
         check(!(await h.$("#menu")), "no menu on the home page");
-        check(await h.$eval(".hero", (e) => e.nextElementSibling && e.nextElementSibling.id === "histoire"), "« Notre histoire » right under the hero");
+        check(await h.$eval(".hero", (e) => getComputedStyle(e).backgroundColor === "rgb(13, 14, 13)"), "a dark hero, like the reference");
+        check(await h.$eval(".hero__pizza", (e) => /pizza-plate/.test(e.currentSrc || e.src)) && await h.$(".hero__glow"), "the pizza on its plate, with the warm light under it");
+        check(await h.$$eval("main > section", (s) => s.map((x) => x.id || x.classList[0]).join(",")) === "hero,signature,histoire,avis,infos", "hero, signature collection, our story, experiences, info, in that order");
+        check((await h.textContent("#sig-title")).replace(/\s+/g, " ").trim() === T.sig, "signature collection title");
+        check(await h.$$eval(".sig__card", (c) => c.length) === 4 && await h.$$eval(".sig__price", (p) => p.every((x) => /\d+ DH/.test(x.textContent))), "4 signature dishes with their menu price");
+        check(await h.$$eval(".sig__media.is-soon", (m) => m.length) === 4, "photo placeholders until the photos arrive");
+        await h.click('[data-sig-add="pizza-cibo-napoli"]');
+        check(await h.evaluate(() => JSON.parse(localStorage.getItem("cibo.cart.v1")).some((l) => l.id === "pizza-cibo-napoli" && l.qty === 1)) && (await h.textContent(".topbar .js-cart-count")).trim() === "1", "the cart button puts the dish in the cart");
+        check(await h.$$eval(".story__photos .ph.is-soon", (p) => p.map((x) => x.dataset.photo).join(",")) === "team,plate,outside", "our story: 3 photo placeholders (team, plate, outside)");
+        check(await h.$$eval("#story-stats li", (l) => l.length) === 3, "our story: 3 real numbers");
+        check((await h.textContent("#reviews-title")).replace(/\s+/g, " ").trim() === T.xp, "experiences title");
+        check(await h.$$eval("#reviews-list .review", (r) => r.length) === 3, "the 3 Google reviews");
+        if (width === 390) {
+          const before = await h.$eval("#reviews-list", (l) => l.scrollLeft);
+          await h.click('#xp-dots [data-dot="2"]');
+          await h.waitForTimeout(700);
+          check(await h.$eval("#reviews-list", (l) => l.scrollLeft) > before, "phones: the reviews slide sideways with the dots");
+        }
         check(/Cibo Napoli/.test(await h.title()), "page title");
         check(await h.$eval('link[rel="canonical"]', (l) => /^https:\/\//.test(l.href)), "canonical link");
         check(await h.$$eval('script[type="application/ld+json"]', (s) => s.some((x) => /"Restaurant"/.test(x.textContent))), "schema.org Restaurant data");
@@ -178,8 +195,13 @@ async function run() {
       check(await page.$$eval(".dish", (d) => d.filter((x) => !x.querySelector(".dish__desc")).length) === 10, "every dish with a description on the menu shows it");
       if (width === 390) {
         const tops = await page.$$eval("#cat-pizze .dish", (d) => d.slice(0, 3).map((x) => Math.round(x.getBoundingClientRect().top)));
-        check(tops[0] === tops[1] && tops[2] > tops[1], "phones: 2 dishes per row");
+        check(tops[0] < tops[1] && tops[1] < tops[2], "phones: one dish per row, like a road map");
       }
+      const sides = await page.$$eval("#cat-pizze .dish__media", (m) => m.slice(0, 4).map((x) => { const r = x.getBoundingClientRect(); return r.left + r.width / 2 < innerWidth / 2 ? "L" : "R"; }).join(""));
+      check(sides === "LRLR" || sides === "RLRL", "the plates alternate left and right");
+      await page.waitForTimeout(300);
+      check(await page.$$eval("#cat-pizze .road__path", (p) => p.length) === 19, "a line runs from each plate to the next");
+      check(await page.$$eval("#cat-pizze .road__veg", (v) => v.length) >= 19, "vegetables along the way");
       check(await page.$$eval("#cat-bevande .dish__add", (b) => b.every((x) => x.disabled)), "drinks without a price cannot be ordered yet");
       check(!(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)), "no sideways scrolling");
       await shot(page, `${tag}-top`);
@@ -436,7 +458,11 @@ async function run() {
     check(/31-08/.test(cgv) && /10 DH/.test(cgv) && /espèces/.test(cgv) && /Réservations/.test(cgv), "terms page: law 31-08, delivery fee, payment, bookings");
     check(/réservation/i.test(priv), "privacy page: bookings");
     check(!/conforme|compliant/i.test(priv + cgv), "no claim of being « compliant »");
-    for (const f of ["/site.webmanifest", "/sw.js", "/commandes/staff.webmanifest", "/commandes/sw.js", "/robots.txt", "/sitemap.xml", "/assets/share.jpg", "/favicon.ico", "/avis/el-mansouria/", "/commander/", "/reserver/", "/assets/hero/pizza-peperoni.webp"]) {
+    {
+      const sw = require("fs").readFileSync(require("path").join(__dirname, "..", "sw.js"), "utf8");
+      check(/headers\.has\("range"\)/.test(sw) && /mp4\|webm/.test(sw), "the service worker leaves the intro film (Range requests) to the browser");
+    }
+    for (const f of ["/site.webmanifest", "/sw.js", "/commandes/staff.webmanifest", "/commandes/sw.js", "/robots.txt", "/sitemap.xml", "/assets/share.jpg", "/favicon.ico", "/avis/el-mansouria/", "/commander/", "/reserver/", "/assets/hero/pizza-plate.webp", "/assets/intro/intro-portrait.mp4"]) {
       check((await c.request.get(BASE + f)).ok(), `${f} is served`);
     }
     const man = await (await c.request.get(`${BASE}/site.webmanifest`)).json();

@@ -1,5 +1,5 @@
 /*
- * Cibo Napoli: the order page (/commander/). Menu (tiles, category bar, dishes 2 per row on phones), options asked
+ * Cibo Napoli: the order page (/commander/). Menu (tiles, category bar, dishes laid out as a road map by js/roadmap.js), options asked
  * before adding (pasta shape), big photo (click on PC, long press on phones), cart with pickup or delivery (map,
  * GPS or tap, the drawn zone, flat fee), then the order (js/orders.js) and the live tracker (js/common.js).
  */
@@ -36,10 +36,10 @@
           <h2 class="cat__title" id="cat-${cat.id}-title">${esc(L(cat.name))}</h2>
           ${cat.sub ? `<p class="cat__sub">${esc(L(cat.sub))}</p>` : ""}
         </header>
-        <div class="dishes">
+        <div class="dishes road">
           ${cat.items.map((it) => `
             <article class="dish" id="dish-${it.id}" data-id="${it.id}">
-              <div class="dish__media${it.image ? " has-photo" : ""}" ${it.image ? `role="button" tabindex="0" aria-label="${esc(t("menu.photo", { name: L(it.name) }))}"` : ""}>${media(it, cat, "dish")}</div>
+              <div class="dish__media${it.image ? " has-photo" : ""}" ${it.image ? `role="button" tabindex="0" aria-label="${esc(t("menu.photo", { name: L(it.name) }))}"` : ""}>${media(it, cat, "dish")}<span class="dish__qty" data-qty="${it.id}" hidden></span></div>
               <div class="dish__body">
                 <h3 class="dish__name">${esc(L(it.name))}</h3>
                 ${it.desc ? `<p class="dish__desc">${esc(L(it.desc))}</p>` : ""}
@@ -50,7 +50,6 @@
                   </button>
                 </div>
               </div>
-              <span class="dish__qty" data-qty="${it.id}" hidden></span>
             </article>`).join("")}
         </div>
       </section>`).join("");
@@ -75,6 +74,7 @@
     });
     setupPhotos();
     updateQtyBadges();
+    if (window.ROADMAP) window.ROADMAP.watch($("#menu-sections"));
   }
 
   /* ---------- Big photo ---------- */
