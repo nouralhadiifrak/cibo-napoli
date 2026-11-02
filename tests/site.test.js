@@ -17,7 +17,7 @@ const { chromium } = require("playwright");
 
 const ROOT = path.join(__dirname, "..");
 const SHOTS = process.env.SHOTS || "";
-const TYPES = { ".woff2": "font/woff2", ".webp": "image/webp", ".jpg": "image/jpeg", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".png": "image/png", ".ico": "image/x-icon", ".xml": "application/xml", ".webmanifest": "application/manifest+json", ".txt": "text/plain", ".svg": "image/svg+xml" };
+const TYPES = { ".mp4": "video/mp4", ".webm": "video/webm", ".woff2": "font/woff2", ".webp": "image/webp", ".jpg": "image/jpeg", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".png": "image/png", ".ico": "image/x-icon", ".xml": "application/xml", ".webmanifest": "application/manifest+json", ".txt": "text/plain", ".svg": "image/svg+xml" };
 const TEST_PHONE = "0634235350";
 // Casablanca is UTC+1 (UTC+0 during Ramadan): 19:00 UTC is open either way, 03:00 UTC is closed.
 const OPEN_TIME = new Date("2026-11-02T19:00:00Z");
@@ -88,16 +88,34 @@ async function run() {
 
       section(`[${tag}] intro`);
       {
+        // the film: plays, then the real logo takes over from the film's last frame and glides into the header
         const ctx = await newContext(browser, { width });
         const page = await open(ctx, `${BASE}/${q}`);
-        check(await page.isVisible(".intro"), "the intro shows the logo");
-        await page.clock.runFor(1500);
-        check(await page.isVisible(".intro"), "the intro is still there at 1.5 s");
-        await page.clock.runFor(1900);
+        check(await page.isVisible(".intro"), "the intro opens");
+        await page.waitForFunction(() => { const v = document.querySelector(".intro__video"); return v && v.currentTime > 0.3; }, null, { timeout: 5000 }).catch(() => {});
+        check(await page.$eval(".intro", (e) => e.classList.contains("has-video")), "the intro film plays");
+        const kind = await page.$eval(".intro__video", (v) => v.currentSrc.includes("landscape") ? "landscape" : "portrait");
+        check(kind === (width >= 844 ? "landscape" : "portrait"), `the ${width >= 844 ? "wide" : "tall"} film is used`);
+        await page.waitForFunction(() => { const i = document.querySelector(".intro"); return !i || i.classList.contains("is-handoff"); }, null, { timeout: 6000 }).catch(() => {});
+        if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `${tag}-intro-handoff.png`) });
+        check(await page.$eval(".intro", (e) => e.classList.contains("is-handoff")), "the real logo takes over at the end of the film");
+        await page.clock.runFor(800);
+        await page.waitForTimeout(150);
+        await page.clock.runFor(400);
         await page.waitForTimeout(450);
-        check(!(await page.$(".intro")), "the intro is gone after about 3 s");
+        check(!(await page.$(".intro")), "the intro is gone after the glide");
         check(await page.$eval(".brand__logo", (e) => getComputedStyle(e).opacity === "1"), "the logo is in the header");
         await ctx.close();
+        // the classic intro (when the film can't play)
+        const ctx3 = await newContext(browser, { width });
+        const p3 = await open(ctx3, `${BASE}/${q}${amp}introvideo=0`);
+        check(await p3.isVisible(".intro__logo"), "the classic intro shows the logo");
+        await p3.clock.runFor(1500);
+        check(await p3.isVisible(".intro"), "the classic intro is still there at 1.5 s");
+        await p3.clock.runFor(1900);
+        await p3.waitForTimeout(450);
+        check(!(await p3.$(".intro")), "the classic intro is gone after about 3 s");
+        await ctx3.close();
         const ctx2 = await newContext(browser, { width });
         const p2 = await open(ctx2, `${BASE}/${q}`);
         await p2.mouse.click(10, 300);

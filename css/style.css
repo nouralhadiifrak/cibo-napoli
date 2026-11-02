@@ -119,8 +119,20 @@ button { cursor: pointer; }
 .intro.is-flying .intro__logo { animation: none; opacity: 1; transition: transform .7s cubic-bezier(.65, 0, .35, 1); }
 .intro.is-flying .intro__tag, .intro.is-flying .intro__skip { opacity: 0; transition: opacity .2s; animation: none; }
 .intro.is-leaving { opacity: 0; visibility: hidden; }
+/* video intro: the pizza box film plays full screen, then the real logo takes over from the one in its last frame */
+.intro.has-video { background: #f4f3ef; }
+.intro__video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .45s ease; }
+.intro.has-video .intro__video { opacity: 1; }
+.intro.has-video .intro__center { position: relative; z-index: 1; }
+.intro.has-video .intro__logo, .intro.has-video .intro__tag { opacity: 0; animation: none; }
+.intro.has-video .intro__skip { z-index: 2; background: rgba(0, 0, 0, .28); }
+/* handoff: the film's last frame becomes the same plain green under the real logo, and the green clears as it flies */
+.intro.has-video.is-handoff { background: rgb(20, 126, 27); transition: none; }
+.intro.is-handoff .intro__video { opacity: 0; transition: none; }
+.intro.is-handoff .intro__logo { opacity: 1; }
+.intro.has-video.is-flying { background: rgba(20, 126, 27, 0); transition: background-color .7s cubic-bezier(.6, 0, .9, .6); }
 html.intro-on .brand__logo { opacity: 0; }
-html.intro-done .brand__logo { opacity: 1; transition: opacity .2s; }
+html.intro-done .brand__logo { opacity: 1; }
 @keyframes introIn { to { opacity: 1; transform: scale(1); } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
