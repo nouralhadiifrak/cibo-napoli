@@ -282,7 +282,7 @@
     $("#sum-fee").textContent = state.mode === "delivery" ? (inZone() ? money(C.delivery.fee) : "—") : money(0);
     CN.roll($("#sum-total"), money(subtotal() + deliveryFee()));
     const go = $("#order-btn");
-    const open = CN.isOpen();
+    const open = CN.isOpen() || !!C.orders.alwaysOpen; // alwaysOpen: temporary, for the demo to the owner
     go.disabled = state.sending || !n || !open;
     go.textContent = state.sending ? t("cart.sending") : open ? t("cart.order", { total: money(subtotal() + deliveryFee()) }) : t("cart.closed", { time: CN.hourLabel(C.hours.open) });
   }
@@ -406,7 +406,7 @@
   async function submitOrder() {
     const err = $("#order-err");
     err.textContent = "";
-    if (!CN.isOpen() || state.sending) return;
+    if ((!CN.isOpen() && !C.orders.alwaysOpen) || state.sending) return;
     const m = missing();
     if (m) {
       err.textContent = t(m);

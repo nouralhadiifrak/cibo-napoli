@@ -62,7 +62,7 @@ async function newContext(browser, { width, height = 844, time = OPEN_TIME, redu
   if (!realDb) {
     await context.route(/\/js\/config\.js/, async (route) => {
       const res = await route.fetch();
-      const body = (await res.text()).replace(/supabaseUrl:\s*"[^"]*"/, 'supabaseUrl: ""');
+      const body = (await res.text()).replace(/supabaseUrl:\s*"[^"]*"/, 'supabaseUrl: ""').replace(/alwaysOpen:\s*true/, "alwaysOpen: false");
       await route.fulfill({ response: res, body });
     });
   }
@@ -457,6 +457,24 @@ async function run() {
         await c.close();
       }
     }
+  }
+
+  section("[demo for the owner] orders at any hour");
+  {
+    const c = await newContext(browser, { width: 390, time: CLOSED_TIME, realDb: true });
+    await c.route(/\/js\/config\.js/, async (route) => {
+      const res = await route.fetch();
+      await route.fulfill({ response: res, body: (await res.text()).replace(/supabaseUrl:\s*"[^"]*"/, 'supabaseUrl: ""') });
+    });
+    const p = await open(c, `${BASE}/commander/`);
+    const always = await p.evaluate(() => !!window.CONFIG.orders.alwaysOpen);
+    if (always) {
+      await addDish(p, "bella-margarita");
+      await p.click(".cart-btn");
+      check(!(await p.$eval("#order-btn", (b) => b.disabled)), "alwaysOpen (temporary): ordering works at 04:00");
+      check(await p.$eval(".status", (e) => e.classList.contains("is-closed")), "…while the real hours still show « closed »");
+    } else console.log("  · alwaysOpen is off");
+    await c.close();
   }
 
   section("[real database] connected, nothing sent");
