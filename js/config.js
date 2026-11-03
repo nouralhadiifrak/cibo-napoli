@@ -69,14 +69,12 @@ window.CONFIG = {
   // Home page, « Notre histoire »: the 3 photos (e.g. "/assets/home/team.webp", about 1200 px wide, WebP).
   // Empty = a placeholder that says which photo goes there.
   homePhotos: { team: "", plate: "", outside: "" },
-  // Online orders.
-  //  - supabaseUrl empty = DEMO MODE: orders stay in this browser (localStorage). Open /commandes/ in another tab of
-  //    the same browser to play the restaurant. Nothing leaves the phone.
-  //  - with supabaseUrl and publishableKey (public by design; row level security decides what it can do, see
-  //    supabase/schema.sql), orders go to the real staff screen.
+  // Online orders and table bookings: the Supabase project « cibo napoli » (EU, Ireland), schema in
+  // supabase/schema.sql. The publishable key is public by design: row level security decides what it can do.
+  // (Empty supabaseUrl = DEMO MODE: orders stay in the browser; the tests use it.)
   orders: {
-    supabaseUrl: "",
-    publishableKey: "",
+    supabaseUrl: "https://tucvrdecsmdfeacvdkdt.supabase.co",
+    publishableKey: "sb_publishable_KUr-QTxbNq3TPyW_kEg8kA_ChIs8X_Y",
     // After this many minutes without an answer, the customer is offered WhatsApp.
     callAfterMinutes: 5,
     // Public half of the push notification keys (the private half stays in the database, never in this repo).

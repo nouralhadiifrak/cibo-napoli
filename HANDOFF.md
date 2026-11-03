@@ -37,7 +37,11 @@ Intro in js/intro.js, kept separate on purpose; its films are in assets/intro/.
 - Buttons: WhatsApp green, call orange, Google review in Google's look, « La Carte » orange with a menu icon.
 - Italian band (tricolore + gold words) between the hero and the signature collection.
 - Signature collection on phones: native swipe + slow drift (js/home.js).
-- Orders only reach /commandes/ in the SAME browser until Supabase is set up (demo mode).
+- Supabase is LIVE: project « cibo napoli », ref tucvrdecsmdfeacvdkdt, eu-west-1 (Ireland), in its own organization
+  (same Supabase login as Chicken Amine, different organization). Schema applied from supabase/schema.sql
+  (migrations cibo_napoli_orders_bookings_push + advisor_fixes_pg_net_schema_fk_indexes). Advisors: clean except the
+  intended « RLS, no policy » info on push_config/push_sent/push_log.
+- The tests switch the site to demo mode (they never write to the real database); ORDER_TESTS=1 keeps the real one.
   The logo's place in each film's last frame is `LAST` in `js/intro.js`: measure it again if the films change.
   No dark-mode button (removed); « Installer » lives in the ☰ panel.
 - Google Maps: https://maps.app.goo.gl/SZC2hhTLup2dU2f38 (pin 33.7372332, -7.3142341; Place ID ChIJWcsRBQCxpw0RGfvunC8altw).
@@ -53,4 +57,7 @@ Intro in js/intro.js, kept separate on purpose; its films are in assets/intro/.
 - Pasta shape choice (fusilli/spaghetti/tagliatelle) assumed for all « Pasta fresca »; not for ravioli, lasagna, plats.
 - Dish photos (the menu scans are too small to use): originals from the owner.
 - Legal: seller's full address and e-mail; CNDP number (blank space left); no RC/ICE/IF.
-- Supabase project, accounts, push keys; then Cloudflare Pages and the domain.
+- Staff accounts (owner + staff): to create in Authentication → Users, then link in public.staff.
+- « Allow new users to sign up » must be OFF (Authentication → Sign In / Providers).
+- Push notifications: VAPID keys + edge function not set up yet (the staff screen still rings while it is open).
+- Then Cloudflare Pages and the domain.

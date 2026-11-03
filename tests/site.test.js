@@ -8,7 +8,9 @@
  * zone with GPS, totals), ordering and live tracking with the staff screen (demo mode: same browser), cancelling,
  * WhatsApp as the way out, anti-spam, closed hours, the owner's view and statistics, legal pages, PWA files,
  * reduced motion and JavaScript errors. On the live site the security headers are checked too.
- * With a real Supabase project, the order flow creates real orders: it only runs there with ORDER_TESTS=1.
+ * The site is connected to the real database (Supabase): the tests switch it to DEMO MODE (orders in the browser)
+ * so they never create real orders or bookings, also against the live site. ORDER_TESTS=1 keeps the real database.
+ * A separate check makes sure the real mode loads (staff sign-in form, site in real mode), without sending anything.
  */
 const http = require("http");
 const fs = require("fs");
@@ -48,7 +50,7 @@ let failures = 0;
 const check = (cond, msg) => { if (cond) console.log("  ✓ " + msg); else { failures++; console.log("  ✗ " + msg); } };
 const section = (s) => console.log("\n" + s);
 
-async function newContext(browser, { width, height = 844, time = OPEN_TIME, reducedMotion = "no-preference", geo } = {}) {
+async function newContext(browser, { width, height = 844, time = OPEN_TIME, reducedMotion = "no-preference", geo, realDb = !!process.env.ORDER_TESTS } = {}) {
   const context = await browser.newContext({
     viewport: { width, height }, reducedMotion, serviceWorkers: "block", locale: "fr-FR",
     geolocation: geo, permissions: geo ? ["geolocation"] : [],
@@ -56,6 +58,14 @@ async function newContext(browser, { width, height = 844, time = OPEN_TIME, redu
   await context.clock.install({ time });
   // no map tiles from the internet during the tests
   await context.route(/tile\.openstreetmap\.org/, (r) => r.fulfill({ status: 204, body: "" }));
+  // demo mode: the same js/config.js with the database address emptied
+  if (!realDb) {
+    await context.route(/\/js\/config\.js/, async (route) => {
+      const res = await route.fetch();
+      const body = (await res.text()).replace(/supabaseUrl:\s*"[^"]*"/, 'supabaseUrl: ""');
+      await route.fulfill({ response: res, body });
+    });
+  }
   return context;
 }
 async function open(context, url) {
@@ -447,6 +457,19 @@ async function run() {
         await c.close();
       }
     }
+  }
+
+  section("[real database] connected, nothing sent");
+  {
+    const c = await newContext(browser, { width: 390, realDb: true });
+    const s = await open(c, `${BASE}/commandes/`);
+    await s.waitForSelector("#login-form:not([hidden])", { timeout: 15000 }).catch(() => null);
+    check(await s.isVisible("#login-form") && !(await s.isVisible("#demo-login")), "the staff screen asks to sign in (real accounts, no demo buttons)");
+    const o = await open(c, `${BASE}/commander/`);
+    check(await o.evaluate(() => window.ORDERS && window.ORDERS.demo === false && /supabase\.co$/.test(new URL(window.CONFIG.orders.supabaseUrl).host)), "orders go to the real database");
+    check(s.errors.length === 0 && o.errors.length === 0, "no JavaScript errors in real mode" + (s.errors.concat(o.errors).length ? ": " + s.errors.concat(o.errors).join(" | ") : ""));
+    await shot(s, "staff-login-real");
+    await c.close();
   }
 
   section("[staff] owner's view and statistics");

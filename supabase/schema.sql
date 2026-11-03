@@ -1,5 +1,7 @@
--- Cibo Napoli: online orders. NOT APPLIED YET: the site runs in demo mode until the Supabase project exists.
--- To set up: create a Supabase project in an EU region (free plan), run this file in the SQL editor (or as a
+-- Cibo Napoli: online orders and table bookings.
+-- APPLIED on 2026-11-03 to the Supabase project « cibo napoli » (ref tucvrdecsmdfeacvdkdt, eu-west-1), as the
+-- migrations "cibo_napoli_orders_bookings_push" and "advisor_fixes_pg_net_schema_fk_indexes" (end of this file).
+-- To set up a new project: create it in an EU region (free plan), run this file in the SQL editor (or as a
 -- migration), turn OFF "Allow new users to sign up" (Authentication → Sign In / Providers), create the accounts by
 -- hand, deploy supabase/functions/push, then fill CONFIG.orders in js/config.js. Run the security advisors after.
 --
@@ -12,7 +14,7 @@
 -- rest (dishes, amounts, status), anonymous, is kept 2 years for the statistics, then deleted.
 
 create extension if not exists pg_cron;
-create extension if not exists pg_net;
+create extension if not exists pg_net schema extensions;
 
 create schema if not exists private;
 revoke all on schema private from public, anon, authenticated;
@@ -381,3 +383,12 @@ select cron.schedule('push-log-week', '23 3 * * *', $$ delete from public.push_l
 -- ---------- Accounts (after creating them in Authentication → Users → Add user) ----------
 --   insert into public.staff (user_id, role, location) values ('<staff user id>', 'staff', 'el-mansouria');
 --   insert into public.staff (user_id, role) values ('<owner user id>', 'owner');
+
+-- ---------- 2026-11-03: security and performance advisors ----------
+-- (applied as the migration "advisor_fixes_pg_net_schema_fk_indexes")
+-- pg_net out of the public schema, and indexes for two foreign keys. The remaining advisor notice (« RLS enabled,
+-- no policy » on push_config, push_sent, push_log) is on purpose: nobody reaches those tables from the site.
+drop extension if exists pg_net;
+create extension pg_net schema extensions;
+create index if not exists push_subscriptions_user_idx on public.push_subscriptions (user_id);
+create index if not exists staff_location_idx on public.staff (location);
