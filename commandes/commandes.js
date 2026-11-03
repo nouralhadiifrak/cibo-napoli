@@ -415,12 +415,12 @@
     let actions = "";
     if (!owner && !past && !b.anonymized_at) {
       if (s === "new") actions = `
-        <a class="btn btn--line" href="tel:${esc(b.customer_phone)}">📞 Appeler</a>
+        <a class="btn btn--call" href="tel:${esc(b.customer_phone)}">📞 Appeler</a>
         <button class="btn btn--green" type="button" data-bk="confirm" data-id="${b.id}">Confirmer</button>
         <button class="btn btn--wa" type="button" data-bk="confirm-wa" data-id="${b.id}">Confirmer + WhatsApp</button>
         <button class="btn btn--ghost" type="button" data-bk="refuse" data-id="${b.id}">Refuser</button>`;
       if (s === "confirmed") actions = `
-        <a class="btn btn--line" href="tel:${esc(b.customer_phone)}">📞 Appeler</a>
+        <a class="btn btn--call" href="tel:${esc(b.customer_phone)}">📞 Appeler</a>
         <button class="btn btn--wa" type="button" data-bk="wa" data-id="${b.id}">WhatsApp</button>
         <button class="btn btn--ghost" type="button" data-bk="cancel" data-id="${b.id}">Annuler</button>`;
     }

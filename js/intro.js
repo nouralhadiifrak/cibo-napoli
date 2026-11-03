@@ -76,7 +76,8 @@
 
   // Where the logo sits in each film's last frame, in the film's own pixels (logo-white is cut to its artwork).
   const LAST = {
-    portrait: { w: 720, h: 1280, x: 125, y: 572, lw: 475, lh: 135 },
+    // the phone film is the computer film cut to a tall frame (tools: crop 700 px around the middle, then 720 x 1280)
+    portrait: { w: 720, h: 1280, x: 85, y: 560, lw: 560, lh: 158 },
     landscape: { w: 1920, h: 1080, x: 691, y: 462, lw: 544, lh: 154 },
   };
 
@@ -124,8 +125,9 @@
     };
     video.addEventListener("error", onError);
     if (!video.dataset.kind) {
-      video.poster = `/assets/intro/intro-poster-${kind}.jpg`;
-      video.src = `/assets/intro/intro-${kind}.${mp4 ? "mp4" : "webm"}`;
+      const file = kind === "portrait" ? "portrait-v2" : kind; // -v2: the phone film made from the computer one
+      video.poster = `/assets/intro/intro-poster-${file}.jpg`;
+      video.src = `/assets/intro/intro-${file}.${mp4 ? "mp4" : "webm"}`;
     } else if (video.error) onError();
     intro.classList.add("has-video");
     const p = video.play();

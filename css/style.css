@@ -948,3 +948,57 @@ body[data-page="book"] {
 .navpanel__links a[aria-current="page"] { box-shadow: inset 4px 0 0 #ff8a1d; }
 .navpanel__tools .install-btn--panel { background: #ff8a1d; color: #1a1408; }
 .navpanel__tools .lang a[aria-current="true"] { background: #ff8a1d; color: #1a1408; }
+
+/* ---------- Coloured buttons: WhatsApp green, call orange, Google review, « La Carte » orange ---------- */
+.btn .btn__icon { width: 19px; height: 19px; margin: 0 8px 0 0; flex: 0 0 auto; }
+.btn--wa, .lux .btn.btn--wa { background: #1fa855 !important; color: #fff !important; box-shadow: 0 10px 26px -12px rgba(31, 168, 85, .8) !important; }
+.btn--wa:hover, .lux .btn.btn--wa:hover { background: #178c46 !important; }
+.btn--call, .lux .btn.btn--call { background: #ff8a1d !important; color: #1a1408 !important; box-shadow: 0 10px 26px -12px rgba(255, 138, 29, .8) !important; }
+.btn--call:hover, .lux .btn.btn--call:hover { background: #ff9d40 !important; }
+.btn--google, .lux .btn.btn--google { background: #fff !important; color: #3c4043 !important; border: 1px solid #dadce0 !important; font-weight: 600; letter-spacing: 0; text-transform: none; box-shadow: 0 1px 3px rgba(60, 64, 67, .3), 0 6px 18px -8px rgba(66, 133, 244, .5) !important; }
+.btn--google:hover, .lux .btn.btn--google:hover { background: #f8f9fa !important; box-shadow: 0 1px 3px rgba(60, 64, 67, .3), 0 8px 22px -8px rgba(66, 133, 244, .7) !important; }
+.btn .btn__icon--g { width: 20px; height: 20px; }
+.lux .btn.btn--menu, .btn--menu { background: #ff8a1d !important; color: #1a1408 !important; box-shadow: 0 12px 30px -10px rgba(255, 138, 29, .75) !important; }
+.lux .btn.btn--menu:hover, .btn--menu:hover { background: #ff9d40 !important; }
+/* no turning ring on the coloured ones: their colour says what they do */
+.btn--wa::before, .btn--call::before, .btn--google::before, .btn--menu::before { display: none !important; }
+
+/* ---------- The Italian band (between the hero and the signature collection) ---------- */
+.itband { position: relative; z-index: 2; background: #0c0b08; overflow: hidden; }
+.itband__tri { display: flex; height: 4px; }
+.itband__tri i { flex: 1; }
+.itband__tri i:nth-child(1) { background: #1e7a3c; }
+.itband__tri i:nth-child(2) { background: #f4efe2; }
+.itband__tri i:nth-child(3) { background: #c8252c; }
+.itband__body { position: relative; padding: 20px 0; border-top: 1px solid rgba(212, 175, 95, .55); border-bottom: 1px solid rgba(212, 175, 95, .55);
+  background:
+    linear-gradient(90deg, #0c0b08 0%, transparent 8%, transparent 92%, #0c0b08 100%),
+    radial-gradient(circle at 50% 50%, rgba(212, 175, 95, .09) 0 2px, transparent 2.5px) 0 0 / 22px 22px,
+    linear-gradient(180deg, #17140d, #0f0d09 50%, #17140d); }
+/* a second hairline inside each gold line: the « double filet » of old Italian menus */
+.itband__body::before, .itband__body::after { content: ""; position: absolute; left: 0; right: 0; height: 1px; background: rgba(212, 175, 95, .3); }
+.itband__body::before { top: 4px; }
+.itband__body::after { bottom: 4px; }
+.itband__run { display: flex; align-items: center; width: max-content; white-space: nowrap; animation: itband 60s linear infinite; }
+.itband__word { font-family: var(--serif); font-style: italic; font-weight: 600; font-size: 24px; letter-spacing: .02em; line-height: 1.2;
+  color: #e9c97a; background: linear-gradient(180deg, #f7e2a6 0%, #d4af5f 55%, #a87f34 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.itband__orn { width: 34px; height: 17px; margin: 0 22px; color: #d4af5f; flex: 0 0 auto; }
+@keyframes itband { to { transform: translateX(-50%); } }
+@media (min-width: 900px) { .itband__body { padding: 24px 0; } .itband__word { font-size: 30px; } .itband__orn { margin: 0 30px; } }
+@media (prefers-reduced-motion: reduce) { .itband__run { animation: none; } }
+
+/* ---------- Signature collection on phones: a finger swipes it, and it drifts slowly by itself ---------- */
+@media (max-width: 899px) {
+  .sig__viewport { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; overscroll-behavior-x: contain; touch-action: pan-x pan-y; }
+  .sig__viewport::-webkit-scrollbar { display: none; }
+  .sig__list { animation: none !important; transform: none; }
+}
+
+/* ---------- Menu: one category at a time ---------- */
+.cat[hidden] { display: none !important; }
+.cat-tile.is-active { border-color: #ff8a1d !important; box-shadow: 0 0 0 2px #ff8a1d, 0 18px 40px -20px rgba(255, 138, 29, .55) !important; }
+.cat-tile.is-active .cat-tile__name { color: #ffb25e; }
+.cat { animation: cat-in .35s ease; }
+@keyframes cat-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.cat__nextwrap { margin: 28px 0 8px; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .cat { animation: none; } }

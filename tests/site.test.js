@@ -68,6 +68,14 @@ async function open(context, url) {
   return page;
 }
 const shot = async (page, name, full = false) => { if (SHOTS) { fs.mkdirSync(SHOTS, { recursive: true }); await page.screenshot({ path: path.join(SHOTS, name + ".png"), fullPage: full }); } };
+// the menu shows one category at a time: open the dish's category (with its chip), then add it
+async function addDish(page, id) {
+  await page.evaluate((id) => {
+    const sec = document.getElementById("dish-" + id).closest(".cat");
+    if (sec.hidden) document.querySelector(`.chip[data-chip="${sec.id.slice(4)}"]`).click();
+  }, id);
+  await page.click(`[data-add="${id}"]`);
+}
 const count = (page) => page.$eval(".js-cart-count", (e) => (e.hidden ? 0 : Number(e.textContent)));
 
 async function run() {
@@ -150,11 +158,25 @@ async function run() {
         check(await h.evaluate(() => getComputedStyle(document.body).backgroundColor === "rgb(16, 14, 11)") && await h.$(".hero .aura"), "a dark page with the aura glows behind the hero");
         check(await h.$eval(".hero__pizza", (e) => /pizza-plate/.test(e.currentSrc || e.src)) && await h.$(".hero__glow"), "the pizza on its plate, with the warm light under it");
         check(await h.$$eval("main > section", (s) => s.map((x) => x.id || x.classList[0]).join(",")) === "hero,signature,histoire,avis,infos", "hero, signature collection, our story, experiences, info, in that order");
+        check(await h.$eval(".hero", (e) => e.nextElementSibling && e.nextElementSibling.classList.contains("itband") && e.nextElementSibling.nextElementSibling.id === "signature"), "an Italian band between the hero and the signature collection");
+        check(await h.$eval(".itband__tri i:nth-child(3)", (i) => getComputedStyle(i).backgroundColor === "rgb(200, 37, 44)") && await h.$$eval(".itband__word", (w) => w.length >= 7), "…with the tricolore and the words of the house");
+        check(await h.$eval(".hero .btn--menu", (b) => getComputedStyle(b).backgroundColor === "rgb(255, 138, 29)" && !!b.querySelector(".btn__icon") && !b.querySelector(".btn__arrow")), "« La Carte » is orange, with a menu icon");
+        check(await h.$eval("#avis .btn--google", (b) => getComputedStyle(b).backgroundColor === "rgb(255, 255, 255)" && !!b.querySelector(".btn__icon--g")), "« Laisser un avis Google » in Google's look");
+        check(await h.$eval("#infos .btn--wa", (b) => getComputedStyle(b).backgroundColor === "rgb(31, 168, 85)"), "WhatsApp button green");
+        check(await h.$eval("#infos .btn--call", (b) => getComputedStyle(b).backgroundColor === "rgb(255, 138, 29)"), "call button orange");
         check((await h.textContent("#sig-title")).replace(/\s+/g, " ").trim() === T.sig, "signature collection title");
         check(await h.$$eval(".sig__card:not(.sig__card--clone)", (c) => c.length) === 4 && await h.$$eval(".sig__price", (p) => p.every((x) => /\d+ DH/.test(x.textContent))), "4 signature dishes with their menu price");
         check(await h.$$eval(".sig__card:not(.sig__card--clone) .sig__media.is-soon", (m) => m.length) === 4, "photo placeholders until the photos arrive");
         if (width === 390) {
-          check(await h.$eval(".sig__list", (l) => getComputedStyle(l).animationName === "sig-drift" && getComputedStyle(l).display === "flex"), "phones: the signature dishes side by side, drifting to the left");
+          check(await h.$eval(".sig__viewport", (v) => getComputedStyle(v).overflowX === "auto") && await h.$eval(".sig__list", (l) => getComputedStyle(l).display === "flex"), "phones: the signature dishes side by side, a finger can swipe them");
+          const x0 = await h.$eval(".sig__viewport", (v) => v.scrollLeft);
+          await h.clock.runFor(3000);
+          await h.waitForTimeout(100);
+          const x1 = await h.$eval(".sig__viewport", (v) => v.scrollLeft);
+          check(x1 > x0, "…and they drift slowly by themselves");
+          await h.$eval(".sig__viewport", (v) => { v.scrollLeft += 260; });
+          await h.waitForTimeout(100);
+          check(await h.$eval(".sig__viewport", (v) => v.scrollLeft) > x1 + 200, "a swipe moves them at once");
           const tops = await h.$$eval(".sig__card", (c) => c.slice(0, 2).map((x) => Math.round(x.getBoundingClientRect().top)));
           check(tops[0] === tops[1], "…on one row");
         }
@@ -217,14 +239,19 @@ async function run() {
       check(!(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)), "no sideways scrolling");
       await shot(page, `${tag}-top`);
 
+      check(await page.$$eval(".cat", (c) => c.filter((x) => !x.hidden).map((x) => x.id).join(",")) === "cat-pizze", "only one category is shown: the first one at first");
       await page.click('.cat-tile[data-cat="ravioli"]');
       const scrolled = await page.waitForFunction(() => Math.abs(document.querySelector("#cat-ravioli").getBoundingClientRect().top) < 260, null, { timeout: 4000 }).catch(() => null);
-      check(!!scrolled, "a tile scrolls to its category");
+      check(!!scrolled, "a tile opens its category and scrolls to it");
+      check(await page.$$eval(".cat", (c) => c.filter((x) => !x.hidden).map((x) => x.id).join(",")) === "cat-ravioli" && /#cat-ravioli$/.test(page.url()), "…and shows only that one");
+      await page.click("#cat-ravioli .cat__next");
+      check(await page.$$eval(".cat", (c) => c.filter((x) => !x.hidden).map((x) => x.id).join(",")) === "cat-lasagna", "« next category » at the end");
+      check(await page.$eval('.chip[data-chip="lasagna"]', (c) => c.classList.contains("is-active")), "the category bar follows");
 
-      await page.click('[data-add="bella-margarita"]');
+      await addDish(page, "bella-margarita");
       check(await count(page) === 1, "a pizza goes straight into the cart");
       check((await page.textContent("#toast")).toLowerCase().includes(T.added), "a message says it was added");
-      await page.click('[data-add="bolognaise"]');
+      await addDish(page, "bolognaise");
       await page.waitForSelector("#options.is-open");
       check((await page.textContent(".sheet__group-title")).trim() === T.pasta, "fresh pasta asks for the pasta shape");
       await page.click(".sheet__add");
@@ -303,14 +330,14 @@ async function run() {
         await staff.click('[data-do="on_the_way"]');
         await staff.click('[data-do="done"]');
         await page.waitForFunction((txt) => document.querySelector(".tracker__head").textContent.includes(txt), T.done);
-        check((await page.textContent(".btn--review")).includes(T.review), "a Google review button after the order");
-        check((await page.getAttribute(".btn--review", "href")).includes("placeid=ChIJ"), "it opens the restaurant's review form");
+        check((await page.textContent(".btn--google")).includes(T.review), "a Google review button after the order");
+        check((await page.getAttribute(".btn--google", "href")).includes("placeid=ChIJ"), "it opens the restaurant's review form");
         await shot(page, `${tag}-tracker-done`);
         await shot(staff, `${tag}-staff-board`, true);
 
         // cancelling while it waits
         await page.click("[data-track-close]");
-        await page.click('[data-add="tiramisu"]');
+        await addDish(page, "tiramisu");
         await page.click(".cart-btn");
         await page.click('.seg label:has-text("' + (lang === "en" ? "Takeaway" : "À emporter") + '")');
         await page.click("#order-btn");
@@ -323,7 +350,7 @@ async function run() {
 
         // no answer after 5 minutes: WhatsApp and call
         await page.click("[data-track-close]");
-        await page.click('[data-add="tiramisu"]');
+        await addDish(page, "tiramisu");
         await page.click(".cart-btn");
         await page.click("#order-btn");
         await page.waitForSelector("#tracker .tracker--new");
@@ -339,7 +366,7 @@ async function run() {
         await page.click("[data-track-cancel]");
         await page.click("[data-track-close]");
         await page.evaluate(() => { for (let i = 0; i < 2; i++) window.ORDERS.DemoStore.insert({ id: window.ORDERS.uuid(), token: "x", location: "el-mansouria", mode: "pickup", customer_name: "T", customer_phone: "0634235350", items: [], subtotal: 1, delivery_fee: 0, total: 1 }); });
-        await page.click('[data-add="tiramisu"]');
+        await addDish(page, "tiramisu");
         await page.click(".cart-btn");
         await page.click("#order-btn");
         await page.waitForTimeout(300);
@@ -414,7 +441,7 @@ async function run() {
         await home.waitForTimeout(500);
         check(await home.$eval(".status", (e) => e.classList.contains("is-closed")) && (await home.textContent(".status")).includes(T.closed), "closed at 04:00");
         const p = await open(c, `${BASE}/commander/${q}`);
-        await p.click('[data-add="bella-margarita"]');
+        await addDish(p, "bella-margarita");
         await p.click(".cart-btn");
         check(await p.$eval("#order-btn", (b) => b.disabled), "ordering is off while closed");
         await c.close();
@@ -475,7 +502,7 @@ async function run() {
       const sw = require("fs").readFileSync(require("path").join(__dirname, "..", "sw.js"), "utf8");
       check(/headers\.has\("range"\)/.test(sw) && /mp4\|webm/.test(sw), "the service worker leaves the intro film (Range requests) to the browser");
     }
-    for (const f of ["/site.webmanifest", "/sw.js", "/commandes/staff.webmanifest", "/commandes/sw.js", "/robots.txt", "/sitemap.xml", "/assets/share.jpg", "/favicon.ico", "/avis/el-mansouria/", "/commander/", "/reserver/", "/assets/hero/pizza-plate.webp", "/assets/intro/intro-portrait.mp4"]) {
+    for (const f of ["/site.webmanifest", "/sw.js", "/commandes/staff.webmanifest", "/commandes/sw.js", "/robots.txt", "/sitemap.xml", "/assets/share.jpg", "/favicon.ico", "/avis/el-mansouria/", "/commander/", "/reserver/", "/assets/hero/pizza-plate.webp", "/assets/intro/intro-portrait-v2.mp4"]) {
       check((await c.request.get(BASE + f)).ok(), `${f} is served`);
     }
     const man = await (await c.request.get(`${BASE}/site.webmanifest`)).json();

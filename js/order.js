@@ -20,6 +20,39 @@
     if (item && item.image) return `<img class="${cls}__img" src="${esc(item.image)}" alt="${esc(L(item.name))}" loading="lazy" width="600" height="600">`;
     return `<span class="${cls}__art ${cls}__art--${cat.art}">${window.ART.svg(cat.art)}</span>`;
   }
+  // Only the chosen category is shown (the menu is long): a tile or a chip shows it; at its end, « next category ».
+  const catIds = window.MENU.map((c) => c.id);
+  function nextCat(cat) {
+    const i = catIds.indexOf(cat.id);
+    const nxt = window.MENU[(i + 1) % window.MENU.length];
+    return `<p class="cat__nextwrap"><a class="btn btn--outline cat__next" href="#cat-${nxt.id}" data-show="${nxt.id}"><span>${esc(t("menu.next", { name: L(nxt.name) }))}</span><svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a></p>`;
+  }
+  let shown = null;
+  function showCat(id, scroll) {
+    if (!catIds.includes(id)) id = catIds[0];
+    shown = id;
+    $$(".cat").forEach((s) => { s.hidden = s.id !== `cat-${id}`; });
+    $$(".chip").forEach((c) => { const on = c.dataset.chip === id; c.classList.toggle("is-active", on); c.setAttribute("aria-current", on ? "true" : "false"); });
+    $$(".cat-tile").forEach((c) => { const on = c.dataset.cat === id; c.classList.toggle("is-active", on); c.setAttribute("aria-current", on ? "true" : "false"); });
+    const chip = $(`.chip[data-chip="${id}"]`);
+    const bar = $("#cat-chips");
+    if (chip && bar && bar.scrollTo) bar.scrollTo({ left: chip.offsetLeft - bar.clientWidth / 2 + chip.clientWidth / 2, behavior: "smooth" });
+    try { history.replaceState(null, "", `${location.pathname}${location.search}#cat-${id}`); } catch (e) { /* old browser */ }
+    if (scroll) {
+      // the category starts just under the header and the category bar
+      const sec = $(`#cat-${id}`);
+      const top = sec.getBoundingClientRect().top + window.scrollY - (CN.$(".topbar").offsetHeight + $(".chips-bar").offsetHeight + 8);
+      window.scrollTo({ top: Math.max(0, top), behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    }
+  }
+  // which category to open: the one in the address (#cat-… or a dish #dish-…), else the first
+  function fromHash() {
+    const h = decodeURIComponent(location.hash || "");
+    if (h.startsWith("#cat-")) return { cat: h.slice(5) };
+    if (h.startsWith("#dish-") && ITEMS.has(h.slice(6))) return { cat: ITEMS.get(h.slice(6)).cat.id, dish: h.slice(6) };
+    return { cat: catIds[0] };
+  }
+
   function renderMenu() {
     $("#cat-tiles").innerHTML = window.MENU.map((cat) => `
       <a class="cat-tile cat-tile--${cat.art}" href="#cat-${cat.id}" data-cat="${cat.id}">
@@ -52,23 +85,21 @@
               </div>
             </article>`).join("")}
         </div>
+        ${nextCat(cat)}
       </section>`).join("");
 
-    if ("IntersectionObserver" in window) {
-      const io = new IntersectionObserver((entries) => {
-        entries.forEach((e) => {
-          if (!e.isIntersecting) return;
-          const id = e.target.id.replace("cat-", "");
-          $$(".chip").forEach((c) => c.classList.toggle("is-active", c.dataset.chip === id));
-          const chip = $(`.chip[data-chip="${id}"]`);
-          const bar = $("#cat-chips");
-          if (chip && bar && bar.scrollTo) bar.scrollTo({ left: chip.offsetLeft - bar.clientWidth / 2 + chip.clientWidth / 2, behavior: "smooth" });
-        });
-      }, { rootMargin: "-45% 0px -50% 0px" });
-      $$(".cat").forEach((s) => io.observe(s));
-    }
+    const start = fromHash();
+    showCat(start.cat, false);
+    if (start.dish) setTimeout(() => { const d = $(`#dish-${start.dish}`); if (d) d.scrollIntoView({ block: "center" }); }, 120);
+    window.addEventListener("hashchange", () => { const h = fromHash(); if (h.cat !== shown) showCat(h.cat, true); });
     $("#menu").addEventListener("click", (e) => {
-      if (e.target.closest("[data-cat]")) CN.installNudge();
+      const pick = e.target.closest("[data-cat], [data-chip], [data-show]");
+      if (pick) {
+        e.preventDefault();
+        showCat(pick.dataset.cat || pick.dataset.chip || pick.dataset.show, true);
+        if (pick.dataset.cat) CN.installNudge();
+        return;
+      }
       const add = e.target.closest("[data-add]");
       if (add) addFromMenu(add.dataset.add, add);
     });
