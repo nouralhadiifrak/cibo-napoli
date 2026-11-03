@@ -144,3 +144,5 @@ body:not(.is-demo) .demo-only { display: none; }
 .bk__people { display: inline-block; margin-top: 6px; padding: 2px 10px; border-radius: 999px; background: var(--green-soft); color: var(--green); font-weight: 700; }
 .bk__kids { background: #fff0cf; color: #7a5300; margin-left: 6px; }
 .btn--wa { background: #1f9e58; color: #fff; }
+.btn--call { background: #ff8a1d; color: #1a1408; }
+.btn--wa { background: #1fa855; color: #fff; }

@@ -31,6 +31,13 @@ Intro in js/intro.js, kept separate on purpose; its films are in assets/intro/.
 - Waiting for the owner's photos: the 4 signature dishes (`image` in js/menu-data.js) and the 3 story photos
   (`homePhotos` in js/config.js: team, plate, outside). Placeholders say which photo goes where.
 - Intro: the 4 s pizza box film, then the logo glides into the header (classic logo-on-green intro as the fallback).
+  Phones play the same film as computers, cut to a tall frame (assets/intro/intro-portrait-v2.*, made from
+  intro-landscape with ffmpeg: crop 700 px around the middle, scale to 720 x 1110, pad to 1280 with the edges smeared).
+- Order page shows one category at a time (tiles, chips, « Catégorie suivante » at the end).
+- Buttons: WhatsApp green, call orange, Google review in Google's look, « La Carte » orange with a menu icon.
+- Italian band (tricolore + gold words) between the hero and the signature collection.
+- Signature collection on phones: native swipe + slow drift (js/home.js).
+- Orders only reach /commandes/ in the SAME browser until Supabase is set up (demo mode).
   The logo's place in each film's last frame is `LAST` in `js/intro.js`: measure it again if the films change.
   No dark-mode button (removed); « Installer » lives in the ☰ panel.
 - Google Maps: https://maps.app.goo.gl/SZC2hhTLup2dU2f38 (pin 33.7372332, -7.3142341; Place ID ChIJWcsRBQCxpw0RGfvunC8altw).

@@ -56,7 +56,8 @@
       toast(t("menu.added", { name: L(hit.item.name) }));
     });
     // phones: the cards sit side by side and drift slowly to the left, without end (a second copy follows the
-    // first; it is hidden from screen readers and on computers). A finger on them pauses the drift.
+    // first; it is hidden from screen readers and on computers). A finger swipes them as fast as it likes (native
+    // scrolling); the drift stops while the finger is there and starts again a moment after.
     if (picks.length > 1) {
       $$(".sig__card", list).forEach((c) => {
         const k = c.cloneNode(true);
@@ -65,11 +66,41 @@
         k.querySelectorAll("button").forEach((b) => b.setAttribute("tabindex", "-1"));
         list.appendChild(k);
       });
-      const pause = (on) => list.classList.toggle("is-paused", on);
-      list.addEventListener("touchstart", () => pause(true), { passive: true });
-      list.addEventListener("touchend", () => setTimeout(() => pause(false), 1200), { passive: true });
-      list.addEventListener("focusin", () => pause(true));
-      list.addEventListener("focusout", () => pause(false));
+      const view = list.parentElement;
+      const phone = () => window.matchMedia("(max-width: 899px)").matches;
+      const SPEED = 22; // px per second
+      let pos = 0, last = 0, holdUntil = 0, touching = false;
+      const loopWidth = () => list.scrollWidth / 2;
+      // keep the position inside the first copy, so it never reaches an end
+      const wrap = () => {
+        const w = loopWidth();
+        if (w <= 0) return;
+        if (view.scrollLeft >= w) view.scrollLeft -= w;
+        else if (view.scrollLeft <= 0) view.scrollLeft += w;
+        pos = view.scrollLeft;
+      };
+      const hold = (ms) => { holdUntil = performance.now() + ms; };
+      // the finger (or its momentum) moved it if it is not where the drift left it
+      const moved = () => Math.abs(view.scrollLeft - Math.round(pos)) > 2;
+      const tick = (now) => {
+        requestAnimationFrame(tick);
+        const dt = last ? Math.min(64, now - last) : 0;
+        last = now;
+        if (moved()) { hold(2500); wrap(); return; }
+        if (!phone() || reduceMotion() || touching || now < holdUntil || document.hidden) return;
+        pos += (SPEED * dt) / 1000;
+        if (Math.round(pos) !== view.scrollLeft) view.scrollLeft = Math.round(pos);
+        if (view.scrollLeft >= loopWidth()) wrap();
+      };
+      view.addEventListener("touchstart", () => { touching = true; }, { passive: true });
+      view.addEventListener("touchend", () => { touching = false; hold(2500); }, { passive: true });
+      view.addEventListener("pointerdown", () => hold(2500));
+      view.addEventListener("scroll", () => { if (moved()) { hold(2500); wrap(); } }, { passive: true });
+      list.addEventListener("focusin", () => hold(60000));
+      list.addEventListener("focusout", () => hold(1500));
+      // start a little way in, so a swipe to the right works at once
+      setTimeout(() => { if (phone()) { view.scrollLeft = 1; pos = view.scrollLeft; } }, 50);
+      requestAnimationFrame(tick);
     }
   }
 
