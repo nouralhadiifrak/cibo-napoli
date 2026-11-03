@@ -150,7 +150,7 @@
       DemoStore.update(id, { status: "cancelled", cancelled_by: "customer" });
       return;
     }
-    const res = await rest(`orders?id=eq.${encodeURIComponent(id)}&status=eq.new`, {
+    const res = await rest(`orders?id=eq.${encodeURIComponent(id)}&status=eq.new&select=id,status`, {
       method: "PATCH",
       headers: { "x-order-token": token, Prefer: "return=representation" },
       body: JSON.stringify({ status: "cancelled", cancelled_by: "customer" }),

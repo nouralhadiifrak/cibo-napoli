@@ -4,7 +4,7 @@ Website and online ordering for Cibo Napoli, a Neapolitan pizzeria in El Mansour
 Plain HTML, CSS and JavaScript, no framework and no build step.
 
 > **Status: demo.** Hosted on Vercel for now (to show the owner), moving to Cloudflare Pages before real use.
-> Orders run in **demo mode**: they stay in the browser (see "Online orders"). Supabase comes after the owner says yes.
+> Orders and bookings go to the real database (Supabase project « cibo napoli », EU). The tests use demo mode.
 
 Three pages: **home** `/`, **order** `/commander/`, **book a table** `/reserver/` (plus privacy and terms).
 
