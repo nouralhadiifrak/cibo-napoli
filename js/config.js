@@ -75,6 +75,9 @@ window.CONFIG = {
   orders: {
     supabaseUrl: "https://tucvrdecsmdfeacvdkdt.supabase.co",
     publishableKey: "sb_publishable_KUr-QTxbNq3TPyW_kEg8kA_ChIs8X_Y",
+    // TEMPORARY, for showing the owner: orders can be sent at any hour, even when the restaurant is closed (the
+    // site still shows the real hours). Set back to false before real use.
+    alwaysOpen: true,
     // After this many minutes without an answer, the customer is offered WhatsApp.
     callAfterMinutes: 5,
     // Public half of the push notification keys (the private half stays in the database, never in this repo).

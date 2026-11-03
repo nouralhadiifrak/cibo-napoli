@@ -61,3 +61,4 @@ Intro in js/intro.js, kept separate on purpose; its films are in assets/intro/.
 - « Allow new users to sign up » must be OFF (Authentication → Sign In / Providers).
 - Push notifications: VAPID keys + edge function not set up yet (the staff screen still rings while it is open).
 - Then Cloudflare Pages and the domain.
+- TEMPORARY: orders.alwaysOpen = true in js/config.js (ordering at any hour for the owner demo). Set it back to false before real use.
